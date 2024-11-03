@@ -75,9 +75,7 @@ const developmentStyle = {
 ## 📫 Let's Connect
 
 <div align="center">
-
-[![GitHub](https://img.shields.io/badge/-GitHub-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Muddyblack)
-
+    
 *"There are two ways to write error-free programs; only the third works." - Alan J. Perlis*
 
 </div>
