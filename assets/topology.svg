@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" role="img" aria-label="Animated leaf-spine network topology">
+  <defs>
+    <radialGradient id="spineGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#A855F7"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </radialGradient>
+    <radialGradient id="leafGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </radialGradient>
+
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <style>
+      .lbl  { font: 600 11px 'JetBrains Mono', ui-monospace, monospace; fill: #8B95A7; letter-spacing: 1px; }
+      .tier { font: 600 10px 'JetBrains Mono', ui-monospace, monospace; fill: #4B5563; letter-spacing: 2px; }
+      .link { stroke: #1F2937; stroke-width: 1.5; fill: none; }
+      .pkt  { fill: #A855F7; filter: url(#glow); }
+    </style>
+  </defs>
+
+  <rect width="820" height="240" fill="#0D1117" rx="10"/>
+
+  <!-- caption -->
+  <text x="24" y="28" class="lbl" style="fill:#6366F1">$ containerlab inspect</text>
+
+  <!-- tier guides -->
+  <text x="24" y="82"  class="tier">SPINE</text>
+  <text x="24" y="186" class="tier">LEAF</text>
+
+  <!-- links: full mesh leaf <-> spine -->
+  <!-- spine-01 (310,80) -->
+  <path id="l11" class="link" d="M 310,80 L 200,180"/>
+  <path id="l12" class="link" d="M 310,80 L 380,180"/>
+  <path id="l13" class="link" d="M 310,80 L 560,180"/>
+  <path id="l14" class="link" d="M 310,80 L 720,180"/>
+  <!-- spine-02 (550,80) -->
+  <path id="l21" class="link" d="M 550,80 L 200,180"/>
+  <path id="l22" class="link" d="M 550,80 L 380,180"/>
+  <path id="l23" class="link" d="M 550,80 L 560,180"/>
+  <path id="l24" class="link" d="M 550,80 L 720,180"/>
+
+  <!-- spines -->
+  <g>
+    <circle cx="310" cy="80" r="20" fill="url(#spineGrad)"/>
+    <circle cx="310" cy="80" r="20" fill="none" stroke="#A855F7" stroke-width="1">
+      <animate attributeName="r" from="20" to="32" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="0.7" to="0" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="310" y="56" class="lbl" text-anchor="middle">spine-01</text>
+  </g>
+  <g>
+    <circle cx="550" cy="80" r="20" fill="url(#spineGrad)"/>
+    <circle cx="550" cy="80" r="20" fill="none" stroke="#A855F7" stroke-width="1">
+      <animate attributeName="r" from="20" to="32" dur="2.2s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="0.7" to="0" dur="2.2s" begin="0.6s" repeatCount="indefinite"/>
+    </circle>
+    <text x="550" y="56" class="lbl" text-anchor="middle">spine-02</text>
+  </g>
+
+  <!-- leaves -->
+  <g>
+    <circle cx="200" cy="180" r="15" fill="url(#leafGrad)"/>
+    <text x="200" y="210" class="lbl" text-anchor="middle">leaf-01</text>
+  </g>
+  <g>
+    <circle cx="380" cy="180" r="15" fill="url(#leafGrad)"/>
+    <text x="380" y="210" class="lbl" text-anchor="middle">leaf-02</text>
+  </g>
+  <g>
+    <circle cx="560" cy="180" r="15" fill="url(#leafGrad)"/>
+    <text x="560" y="210" class="lbl" text-anchor="middle">leaf-03</text>
+  </g>
+  <g>
+    <circle cx="720" cy="180" r="15" fill="url(#leafGrad)"/>
+    <text x="720" y="210" class="lbl" text-anchor="middle">leaf-04</text>
+  </g>
+
+  <!-- packets traveling on links (staggered) -->
+  <circle r="3.5" class="pkt"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#l11"/></animateMotion></circle>
+  <circle r="3"   class="pkt"><animateMotion dur="2.6s" begin="0.4s" repeatCount="indefinite"><mpath href="#l12"/></animateMotion></circle>
+  <circle r="3"   class="pkt"><animateMotion dur="2.9s" begin="0.8s" repeatCount="indefinite"><mpath href="#l13"/></animateMotion></circle>
+  <circle r="3.5" class="pkt"><animateMotion dur="3.2s" begin="0.2s" repeatCount="indefinite"><mpath href="#l14"/></animateMotion></circle>
+
+  <circle r="3"   class="pkt"><animateMotion dur="2.4s" begin="0.6s" repeatCount="indefinite"><mpath href="#l21"/></animateMotion></circle>
+  <circle r="3.5" class="pkt"><animateMotion dur="2.8s" begin="0.1s" repeatCount="indefinite"><mpath href="#l22"/></animateMotion></circle>
+  <circle r="3"   class="pkt"><animateMotion dur="2.1s" begin="0.7s" repeatCount="indefinite"><mpath href="#l23"/></animateMotion></circle>
+  <circle r="3"   class="pkt"><animateMotion dur="3.0s" begin="0.3s" repeatCount="indefinite"><mpath href="#l24"/></animateMotion></circle>
+
+  <text x="24" y="228" class="lbl">spines=2  ·  leaves=4  ·  links=8  ·  state=running</text>
+</svg>
