@@ -1,33 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220" role="img" aria-label="When I ship: night 43%, evening 30%, day 22%, morning 5%">
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="280" viewBox="0 0 640 280"
+     role="img" aria-label="When I ship: evening 41% · day 22% · afternoon 22% · night 8% · morning 7%">
   <defs>
     <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"  stop-color="#6366F1"/>
       <stop offset="100%" stop-color="#A855F7"/>
     </linearGradient>
-
     <linearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0"/>
       <stop offset="50%"  stop-color="#FFFFFF" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-
-    <clipPath id="clipN"><rect x="120" y="32" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="180.6" dur="0.9s" begin="0.10s" fill="freeze"
+    <clipPath id="clip0"><rect x="120" y="32" width="0" height="14" rx="7">
+      <animate attributeName="width" from="0" to="172.7" dur="0.9s" begin="0.1s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
-    <clipPath id="clipM"><rect x="120" y="72" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="21" dur="0.9s" begin="0.25s" fill="freeze"
+    <clipPath id="clip1"><rect x="120" y="72" width="0" height="14" rx="7">
+      <animate attributeName="width" from="0" to="93.3" dur="0.9s" begin="0.25s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
-    <clipPath id="clipE"><rect x="120" y="112" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="126" dur="0.9s" begin="0.40s" fill="freeze"
+    <clipPath id="clip2"><rect x="120" y="112" width="0" height="14" rx="7">
+      <animate attributeName="width" from="0" to="93.3" dur="0.9s" begin="0.4s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
-    <clipPath id="clipD"><rect x="120" y="152" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="92.4" dur="0.9s" begin="0.55s" fill="freeze"
+    <clipPath id="clip3"><rect x="120" y="152" width="0" height="14" rx="7">
+      <animate attributeName="width" from="0" to="32.7" dur="0.9s" begin="0.55s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
-
+    <clipPath id="clip4"><rect x="120" y="192" width="0" height="14" rx="7">
+      <animate attributeName="width" from="0" to="28.0" dur="0.9s" begin="0.7s" fill="freeze"
+               calcMode="spline" keySplines="0.4 0 0.2 1"/>
+    </rect></clipPath>
     <style>
       .label { font: 600 13px 'JetBrains Mono', ui-monospace, monospace; fill: #C9D1D9; }
       .pct   { font: 600 13px 'JetBrains Mono', ui-monospace, monospace; fill: #8B95A7; }
@@ -36,52 +38,63 @@
     </style>
   </defs>
 
-  <rect width="640" height="220" fill="#0D1117" rx="10"/>
+  <rect width="640" height="280" fill="#0D1117" rx="10"/>
   <text x="24" y="22" class="head">WHEN&#160;I&#160;SHIP</text>
 
-  <!-- night : 43% -->
-  <text x="24"  y="44" class="label">night</text>
+  <!-- evening : 41% -->
+  <text x="24" y="46" class="label">evening</text>
   <rect x="120" y="32" width="420" height="14" rx="7" class="track"/>
-  <g clip-path="url(#clipN)">
+  <g clip-path="url(#clip0)">
     <rect x="120" y="32" width="420" height="14" rx="7" fill="url(#barGrad)"/>
     <rect x="-80" y="32" width="80" height="14" fill="url(#shimmer)">
       <animate attributeName="x" from="120" to="540" dur="2.2s" begin="1.0s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="44" class="pct">43%</text>
+  <text x="556" y="46" class="pct">41%</text>
 
-  <!-- morning : 30% -->
-  <text x="24"  y="84" class="label">morning</text>
+  <!-- day : 22% -->
+  <text x="24" y="86" class="label">day</text>
   <rect x="120" y="72" width="420" height="14" rx="7" class="track"/>
-  <g clip-path="url(#clipM)">
+  <g clip-path="url(#clip1)">
     <rect x="120" y="72" width="420" height="14" rx="7" fill="url(#barGrad)"/>
     <rect x="-80" y="72" width="80" height="14" fill="url(#shimmer)">
       <animate attributeName="x" from="120" to="540" dur="2.6s" begin="1.2s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="84" class="pct">5%</text>
+  <text x="556" y="86" class="pct">22%</text>
 
-  <!-- evening : 22% -->
-  <text x="24"  y="124" class="label">evening</text>
+  <!-- afternoon : 22% -->
+  <text x="24" y="126" class="label">afternoon</text>
   <rect x="120" y="112" width="420" height="14" rx="7" class="track"/>
-  <g clip-path="url(#clipE)">
+  <g clip-path="url(#clip2)">
     <rect x="120" y="112" width="420" height="14" rx="7" fill="url(#barGrad)"/>
     <rect x="-80" y="112" width="80" height="14" fill="url(#shimmer)">
       <animate attributeName="x" from="120" to="540" dur="3.0s" begin="1.4s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="124" class="pct">30%</text>
+  <text x="556" y="126" class="pct">22%</text>
 
-  <!-- day : 5% -->
-  <text x="24"  y="164" class="label">day</text>
+  <!-- night : 8% -->
+  <text x="24" y="166" class="label">night</text>
   <rect x="120" y="152" width="420" height="14" rx="7" class="track"/>
-  <g clip-path="url(#clipD)">
+  <g clip-path="url(#clip3)">
     <rect x="120" y="152" width="420" height="14" rx="7" fill="url(#barGrad)"/>
     <rect x="-80" y="152" width="80" height="14" fill="url(#shimmer)">
       <animate attributeName="x" from="120" to="540" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="164" class="pct">22%</text>
+  <text x="556" y="166" class="pct">8%</text>
 
-  <text x="24" y="204" class="pct">utc+1 · germany / france</text>
+  <!-- morning : 7% -->
+  <text x="24" y="206" class="label">morning</text>
+  <rect x="120" y="192" width="420" height="14" rx="7" class="track"/>
+  <g clip-path="url(#clip4)">
+    <rect x="120" y="192" width="420" height="14" rx="7" fill="url(#barGrad)"/>
+    <rect x="-80" y="192" width="80" height="14" fill="url(#shimmer)">
+      <animate attributeName="x" from="120" to="540" dur="3.8s" begin="1.8s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <text x="556" y="206" class="pct">7%</text>
+
+  <text x="24" y="264" class="pct">utc+1 · germany / france · last 365 days · 90 commits</text>
 </svg>

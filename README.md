@@ -50,7 +50,7 @@ data         postgres · mongodb
 
 
 <div align="center">
-  <img src="assets/when-i-ship.svg" alt="night 43% · evening 30% · day 22% · morning 5%" width="640" />
+  <img src="assets/when-i-ship.svg" alt="when i ship" width="640" />
 </div>
 
 </div>
