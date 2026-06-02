@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/Muddyblack">
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=22&pause=1200&color=6366F1&center=true&vCenter=true&width=620&lines=Christian+%E2%80%94+Network+Engineering;Reproducible+network+labs+%26+web+apps;containerlab+%C2%B7+netlab+%C2%B7+nixos+%C2%B7+next.js" alt="" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=22&pause=1200&color=6366F1&center=true&vCenter=true&width=620&lines=hey%2C+i'm+Christian;hobby+dev+%26+network+enthusiast;i+build+the+tools+i+wish+existed+(when+i+have+time);nixos-rice+%C2%B7+kde+widgets+%C2%B7+web+%C2%B7+network+labs" alt="" />
 </a>
 
 <br/>
@@ -11,7 +11,6 @@
 <br/>
 
 [![views](https://komarev.com/ghpvc/?username=Muddyblack&color=6366F1&style=flat-square&label=views)](https://github.com/Muddyblack)
-[![followers](https://img.shields.io/github/followers/Muddyblack?style=flat-square&color=6366F1&labelColor=24292F&label=followers)](https://github.com/Muddyblack)
 
 🇩🇪 &nbsp; 🇫🇷 &nbsp; 🇬🇧
 
@@ -23,18 +22,18 @@
 
 ```yaml
 based:    Germany / France
-work:     full stack & network engineering
-focus:    reproducible network labs, automation, web
-langs:    de · fr · en
+vibe:     hobby dev · network enthusiast · linux tinkerer
+into:     nixos, desktop ricing, automation, making things just work
 ```
 
 ### stack
 
 ```text
-networking   containerlab · netlab (ipSpace) · vscode-containerlab
-systems      nixos · linux · docker · kubernetes
+systems      nixos · linux · docker · kubernetes · ansible
 web          next.js · react · typescript · tailwind
 backend      python · node.js · go (learning)
+networking   containerlab · netlab · frr · cisco · nokia srl · gnmi
+observ.      grafana · prometheus · streaming telemetry
 data         postgres · mongodb
 ```
 
@@ -48,6 +47,11 @@ data         postgres · mongodb
 
 <br/><br/>
 
+<a href="https://github.com/Muddyblack">
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Muddyblack&layout=compact&hide_border=true&bg_color=0D1117&title_color=6366F1&text_color=8B95A7&langs_count=8&hide=html,css" alt="" />
+</a>
+
+<br/><br/>
 
 <div align="center">
   <img src="assets/when-i-ship.svg" alt="when i ship" width="640" />
