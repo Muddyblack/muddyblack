@@ -11,23 +11,23 @@
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
     <clipPath id="clip0"><rect x="120" y="32" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="143.2" dur="0.9s" begin="0.1s" fill="freeze"
+      <animate attributeName="width" from="0" to="142.6" dur="0.9s" begin="0.1s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip1"><rect x="120" y="72" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="95.5" dur="0.9s" begin="0.25s" fill="freeze"
+      <animate attributeName="width" from="0" to="96.7" dur="0.9s" begin="0.25s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip2"><rect x="120" y="112" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="87.5" dur="0.9s" begin="0.4s" fill="freeze"
+      <animate attributeName="width" from="0" to="87.2" dur="0.9s" begin="0.4s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip3"><rect x="120" y="152" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="54.1" dur="0.9s" begin="0.55s" fill="freeze"
+      <animate attributeName="width" from="0" to="53.9" dur="0.9s" begin="0.55s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip4"><rect x="120" y="192" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="39.8" dur="0.9s" begin="0.7s" fill="freeze"
+      <animate attributeName="width" from="0" to="39.6" dur="0.9s" begin="0.7s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <style>
@@ -96,5 +96,5 @@
   </g>
   <text x="556" y="206" class="pct">9%</text>
 
-  <text x="24" y="264" class="pct">utc+1 · germany / france · last 365 days · 264 commits</text>
+  <text x="24" y="264" class="pct">utc+1 · germany / france · last 365 days · 265 commits</text>
 </svg>
