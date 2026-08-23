@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="280" viewBox="0 0 640 280"
-     role="img" aria-label="When I ship: evening 39% · morning 20% · day 18% · afternoon 15% · night 8%">
+     role="img" aria-label="When I ship: evening 39% · morning 20% · day 19% · afternoon 14% · night 8%">
   <defs>
     <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"  stop-color="#6366F1"/>
@@ -11,23 +11,23 @@
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
     <clipPath id="clip0"><rect x="120" y="32" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="164.0" dur="0.9s" begin="0.1s" fill="freeze"
+      <animate attributeName="width" from="0" to="161.7" dur="0.9s" begin="0.1s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip1"><rect x="120" y="72" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="84.2" dur="0.9s" begin="0.25s" fill="freeze"
+      <animate attributeName="width" from="0" to="86.1" dur="0.9s" begin="0.25s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip2"><rect x="120" y="112" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="75.2" dur="0.9s" begin="0.4s" fill="freeze"
+      <animate attributeName="width" from="0" to="78.0" dur="0.9s" begin="0.4s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip3"><rect x="120" y="152" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="61.8" dur="0.9s" begin="0.55s" fill="freeze"
+      <animate attributeName="width" from="0" to="60.5" dur="0.9s" begin="0.55s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <clipPath id="clip4"><rect x="120" y="192" width="0" height="14" rx="7">
-      <animate attributeName="width" from="0" to="34.8" dur="0.9s" begin="0.7s" fill="freeze"
+      <animate attributeName="width" from="0" to="33.7" dur="0.9s" begin="0.7s" fill="freeze"
                calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </rect></clipPath>
     <style>
@@ -63,7 +63,7 @@
   </g>
   <text x="556" y="86" class="pct">20%</text>
 
-  <!-- day : 18% -->
+  <!-- day : 19% -->
   <text x="24" y="126" class="label">day</text>
   <rect x="120" y="112" width="420" height="14" rx="7" class="track"/>
   <g clip-path="url(#clip2)">
@@ -72,9 +72,9 @@
       <animate attributeName="x" from="120" to="540" dur="3.0s" begin="1.4s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="126" class="pct">18%</text>
+  <text x="556" y="126" class="pct">19%</text>
 
-  <!-- afternoon : 15% -->
+  <!-- afternoon : 14% -->
   <text x="24" y="166" class="label">afternoon</text>
   <rect x="120" y="152" width="420" height="14" rx="7" class="track"/>
   <g clip-path="url(#clip3)">
@@ -83,7 +83,7 @@
       <animate attributeName="x" from="120" to="540" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
     </rect>
   </g>
-  <text x="556" y="166" class="pct">15%</text>
+  <text x="556" y="166" class="pct">14%</text>
 
   <!-- night : 8% -->
   <text x="24" y="206" class="label">night</text>
@@ -96,5 +96,5 @@
   </g>
   <text x="556" y="206" class="pct">8%</text>
 
-  <text x="24" y="264" class="pct">utc+1 · germany / france · last 365 days · 374 commits</text>
+  <text x="24" y="264" class="pct">utc+1 · germany / france · last 365 days · 361 commits</text>
 </svg>
