@@ -1,8 +1,8 @@
-name: Update when-i-ship
+name: Update generated assets
 
 on:
   schedule:
-    - cron: "0 3 * * 0"   # Every Sunday at 03:00 UTC
+    - cron: "0 3 * * *"     # daily — streaks and "uptime" change every day
   workflow_dispatch:        # Allow manual trigger from GitHub UI
 
 jobs:
@@ -18,16 +18,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate SVG
+      - name: Generate SVGs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: Muddyblack
-        run: python scripts/generate_when_i_ship.py
+        run: |
+          python scripts/generate_fastfetch.py
+          python scripts/generate_lang_treemap.py
 
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/when-i-ship.svg
-          git diff --cached --quiet || git commit -m "chore: update when-i-ship stats"
+          git add assets/
+          git diff --cached --quiet || git commit -m "chore: update generated stats"
           git push

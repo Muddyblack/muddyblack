@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="900" height="24" viewBox="0 0 900 24" role="presentation">
+  <defs>
+    <linearGradient id="pfade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#000"/><stop offset="9%" stop-color="#fff"/>
+      <stop offset="91%" stop-color="#fff"/><stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+    <mask id="pmask"><rect width="900" height="24" fill="url(#pfade)"/></mask>
+    <!-- via: plated hole -->
+    <g id="via">
+      <circle r="4" fill="#0EADCF" fill-opacity="0.85"/>
+      <circle r="1.7" fill="#0B1620"/>
+    </g>
+  </defs>
+  <g mask="url(#pmask)">
+    <!-- routed traces, 45 degrees only -->
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+      <path d="M0 12h90l8-8h84l8 8h140l8 8h96l8-8h132l8-8h74l8 8h236"
+            stroke="#0EADCF" stroke-opacity="0.75"/>
+      <path d="M0 18h58l8-6h96l6 6h150" stroke="#55FFCC" stroke-opacity="0.35"/>
+      <path d="M560 6h96l6 6h120l8-6h110" stroke="#55FFCC" stroke-opacity="0.35"/>
+    </g>
+
+    <!-- vias at the junctions -->
+    <g>
+      <g transform="translate(90 12)"><use href="#via" xlink:href="#via"/></g>
+      <g transform="translate(330 12)"><use href="#via" xlink:href="#via"/></g>
+      <g transform="translate(478 20)"><use href="#via" xlink:href="#via"/></g>
+      <g transform="translate(662 12)"><use href="#via" xlink:href="#via"/></g>
+      <g transform="translate(782 6)"><use href="#via" xlink:href="#via"/></g>
+    </g>
+
+    <!-- SMD pads -->
+    <g fill="#55FFCC" fill-opacity="0.55">
+      <rect x="214" y="8" width="7" height="8" rx="1"/>
+      <rect x="226" y="8" width="7" height="8" rx="1"/>
+      <rect x="600" y="16" width="7" height="8" rx="1"/>
+      <rect x="612" y="16" width="7" height="8" rx="1"/>
+    </g>
+  </g>
+</svg>

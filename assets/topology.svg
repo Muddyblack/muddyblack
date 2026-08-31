@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" role="img" aria-label="Animated leaf-spine network topology">
   <defs>
     <radialGradient id="spineGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"  stop-color="#A855F7"/>
-      <stop offset="100%" stop-color="#6366F1"/>
+      <stop offset="0%"  stop-color="#55FFCC"/>
+      <stop offset="100%" stop-color="#0EADCF"/>
     </radialGradient>
     <radialGradient id="leafGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"  stop-color="#8B5CF6"/>
-      <stop offset="100%" stop-color="#4F46E5"/>
+      <stop offset="0%"  stop-color="#22D4FF"/>
+      <stop offset="100%" stop-color="#0E7D99"/>
     </radialGradient>
 
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -15,17 +15,17 @@
     </filter>
 
     <style>
-      .lbl  { font: 600 11px 'JetBrains Mono', ui-monospace, monospace; fill: #8B95A7; letter-spacing: 1px; }
-      .tier { font: 600 10px 'JetBrains Mono', ui-monospace, monospace; fill: #4B5563; letter-spacing: 2px; }
-      .link { stroke: #1F2937; stroke-width: 1.5; fill: none; }
-      .pkt  { fill: #A855F7; filter: url(#glow); }
+      .lbl  { font: 600 11px 'JetBrains Mono', ui-monospace, monospace; fill: #8295A0; letter-spacing: 1px; }
+      .tier { font: 600 10px 'JetBrains Mono', ui-monospace, monospace; fill: #4A7A9A; letter-spacing: 2px; }
+      .link { stroke: #254D6A; stroke-width: 1.5; fill: none; }
+      .pkt  { fill: #55FFCC; filter: url(#glow); }
     </style>
   </defs>
 
-  <rect width="820" height="240" fill="#0D1117" rx="10"/>
+  <rect width="820" height="240" fill="#03233A" stroke="#254D6A" stroke-width="1" rx="10"/>
 
   <!-- caption -->
-  <text x="24" y="28" class="lbl" style="fill:#6366F1">$ containerlab inspect</text>
+  <text x="24" y="28" class="lbl" style="fill:#0EADCF">$ containerlab inspect</text>
 
   <!-- tier guides -->
   <text x="24" y="82"  class="tier">SPINE</text>
@@ -46,7 +46,7 @@
   <!-- spines -->
   <g>
     <circle cx="310" cy="80" r="20" fill="url(#spineGrad)"/>
-    <circle cx="310" cy="80" r="20" fill="none" stroke="#A855F7" stroke-width="1">
+    <circle cx="310" cy="80" r="20" fill="none" stroke="#55FFCC" stroke-width="1">
       <animate attributeName="r" from="20" to="32" dur="2.2s" repeatCount="indefinite"/>
       <animate attributeName="opacity" from="0.7" to="0" dur="2.2s" repeatCount="indefinite"/>
     </circle>
@@ -54,7 +54,7 @@
   </g>
   <g>
     <circle cx="550" cy="80" r="20" fill="url(#spineGrad)"/>
-    <circle cx="550" cy="80" r="20" fill="none" stroke="#A855F7" stroke-width="1">
+    <circle cx="550" cy="80" r="20" fill="none" stroke="#55FFCC" stroke-width="1">
       <animate attributeName="r" from="20" to="32" dur="2.2s" begin="0.6s" repeatCount="indefinite"/>
       <animate attributeName="opacity" from="0.7" to="0" dur="2.2s" begin="0.6s" repeatCount="indefinite"/>
     </circle>

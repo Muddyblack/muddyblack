@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="900" height="18" viewBox="0 0 900 18" role="presentation">
+  <defs>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#000"/><stop offset="12%" stop-color="#fff"/>
+      <stop offset="88%" stop-color="#fff"/><stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+    <mask id="edges"><rect width="900" height="18" fill="url(#fade)"/></mask>
+
+    <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#0EADCF" stop-opacity="0.35"/>
+      <stop offset="50%"  stop-color="#55FFCC" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#0EADCF" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#55FFCC" stop-opacity="0"/>
+      <stop offset="70%"  stop-color="#7BFFD9" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#EAFFF8" stop-opacity="1"/>
+    </linearGradient>
+
+    <g id="packet">
+      <rect x="-120" y="8.25" width="120" height="1.5" rx="0.75" fill="url(#trail)"/>
+      <circle cx="0" cy="9" r="2" fill="#EAFFF8"/>
+      <circle cx="0" cy="9" r="4" fill="#55FFCC" opacity="0.25"/>
+    </g>
+    <g id="node">
+      <rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.8"
+            transform="rotate(45)" fill="#0B1620" stroke="#55FFCC" stroke-width="1"/>
+    </g>
+  </defs>
+
+  <g mask="url(#edges)">
+    <g stroke="#0EADCF" stroke-opacity="0.28" stroke-width="1">
+      <path d="M30 6.5v5 M75 6.5v5 M120 6.5v5 M165 6.5v5 M210 6.5v5 M255 6.5v5
+               M300 6.5v5 M345 6.5v5 M390 6.5v5 M510 6.5v5 M555 6.5v5 M600 6.5v5
+               M645 6.5v5 M690 6.5v5 M735 6.5v5 M780 6.5v5 M825 6.5v5 M870 6.5v5"/>
+    </g>
+
+    <rect x="0" y="8.4" width="900" height="1.2" rx="0.6" fill="url(#rail)"/>
+    <path d="M150 9h180 M570 9h180" stroke="#0B1620" stroke-width="3" stroke-dasharray="3 5"/>
+    <path d="M150 9h180 M570 9h180" stroke="#55FFCC" stroke-opacity="0.5"
+          stroke-width="1.2" stroke-dasharray="3 5"/>
+
+    <g transform="translate(150 9)"><use href="#node" xlink:href="#node"/></g>
+    <g transform="translate(330 9)"><use href="#node" xlink:href="#node"/></g>
+    <g transform="translate(570 9)"><use href="#node" xlink:href="#node"/></g>
+    <g transform="translate(750 9)"><use href="#node" xlink:href="#node"/></g>
+
+    <circle cx="450" cy="9" r="6" fill="none" stroke="#55FFCC" stroke-width="1">
+      <animate attributeName="r" values="3.5;7.5;3.5" dur="3.2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="450" cy="9" r="3" fill="#55FFCC">
+      <animate attributeName="opacity" values="0.55;1;0.55" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+
+    <g>
+      <use href="#packet" xlink:href="#packet"/>
+      <animateTransform attributeName="transform" type="translate"
+                        from="0 0" to="1020 0" dur="4.2s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.55">
+      <use href="#packet" xlink:href="#packet"/>
+      <animateTransform attributeName="transform" type="translate"
+                        from="0 0" to="1020 0" dur="4.2s" begin="-2.1s" repeatCount="indefinite"/>
+    </g>
+  </g>
+</svg>
