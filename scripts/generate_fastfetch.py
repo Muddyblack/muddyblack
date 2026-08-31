@@ -50,19 +50,19 @@ STATIC = {
 W          = 820
 LEFT       = 88                 # logo edge; the card's content margin
 RIGHT      = W - 88
-LOGO_SIZE  = 196
-TEXT_X     = 330                # key column
-VAL_X      = 460                # value column
-ROW_STEP   = 22
+LOGO_SIZE  = 150
+TEXT_X     = 272                # key column
+VAL_X      = 360                # value column
+ROW_STEP   = 24
 GAP_STEP   = 18
 HEAD_Y     = 62                 # "user@host" baseline
 BODY_Y     = HEAD_Y + 26        # first row sits one step below this
 
 TZ_OFFSET  = timezone(timedelta(hours=1))   # UTC+1 (Germany / France)
 
-DIAL_R     = 54
-DIAL_HUB   = 15
-BAND_H     = 92
+DIAL_R     = 46
+DIAL_HUB   = 13
+BAND_H     = 158
 
 
 # ── GitHub REST ───────────────────────────────────────────────────────────────
@@ -420,26 +420,43 @@ def _dial(cx: float, cy: float, by_hour: list[int]) -> list[str]:
 
 # ── the streak band ───────────────────────────────────────────────────────────
 
-def _band(y: float, streak) -> list[str]:
+def _band(y: float, by_hour: list[int], streak) -> list[str]:
+    """The clock and the streak figures on one line.
+
+    They were stacked, which cost ~110px of height to say two things that are
+    both "activity". Four cells: the dial keeps its own, the three figures split
+    what is left.
+    """
+    dial_w = 160
+    rest   = (RIGHT - (LEFT + dial_w)) / 3
+    cols   = [LEFT + dial_w + rest * (i + 0.5) for i in range(3)]
+
+    out = ["", "  <!-- when I commit, and how long the streaks run -->"]
+    out += _dial(LEFT + dial_w / 2, y + 68, by_hour)
+    out.append(
+        f'  <text x="{LEFT + dial_w / 2}" y="{y + 148}" class="cap"'
+        ' text-anchor="middle">commits by hour</text>'
+    )
+
+    if not streak:
+        return out
+
     total, span_all, best, span_best, current, span_cur = streak
-    third = (RIGHT - LEFT) / 3
-    cols  = (LEFT + third / 2, LEFT + third * 1.5, LEFT + third * 2.5)
-    cy    = y + 34
-    ring  = 24
-    circ  = 2 * math.pi * ring
-    lead  = circ * 0.75 - 15
+    ring = 24
+    circ = 2 * math.pi * ring
+    lead = circ * 0.75 - 15
+    cy   = y + 54
 
     def figure(cx, value, label, sub):
         return [
-            f'  <text x="{cx:.1f}" y="{y + 28}" class="fig" text-anchor="middle">{value}</text>',
-            f'  <text x="{cx:.1f}" y="{y + 50}" class="figl" text-anchor="middle">{label}</text>',
-            f'  <text x="{cx:.1f}" y="{y + 68}" class="figs" text-anchor="middle">{sub}</text>',
+            f'  <text x="{cx:.1f}" y="{y + 60}" class="fig" text-anchor="middle">{value}</text>',
+            f'  <text x="{cx:.1f}" y="{y + 92}" class="figl" text-anchor="middle">{label}</text>',
+            f'  <text x="{cx:.1f}" y="{y + 108}" class="figs" text-anchor="middle">{sub}</text>',
         ]
 
     def short(d):
         return f"{d:%b} {d.day}"
 
-    out = ["", "  <!-- contributions & streaks -->"]
     out += figure(cols[0], f"{total:,}", "Total Contributions",
                   f"{span_all[0]:%b} {span_all[0].day}, {span_all[0].year} — Present")
 
@@ -454,21 +471,22 @@ def _band(y: float, streak) -> list[str]:
         f'    <path d="{FLAME}" fill="{marina.TEAL}"/>',
         f'    <path d="{FLAME}" fill="{marina.CYAN}" transform="scale(0.5)"/>',
         "  </g>",
-        f'  <text x="{cols[1]:.1f}" y="{y + 74}" class="figl" text-anchor="middle"'
+        f'  <text x="{cols[1]:.1f}" y="{y + 92}" class="figl" text-anchor="middle"'
         f' style="fill:{marina.CYAN}">Current Streak</text>',
     ]
     if span_cur:
         out.append(
-            f'  <text x="{cols[1]:.1f}" y="{y + 90}" class="figs" text-anchor="middle">'
+            f'  <text x="{cols[1]:.1f}" y="{y + 108}" class="figs" text-anchor="middle">'
             f'{short(span_cur[1])}</text>'
         )
 
     out += figure(cols[2], str(best), "Longest Streak",
                   f"{short(span_best[0])} — {short(span_best[1])}")
 
-    for x in (LEFT + third, LEFT + third * 2):
+    for i in range(3):
+        x = LEFT + dial_w + rest * i
         out.append(
-            f'  <rect x="{x:.1f}" y="{y + 16}" width="1" height="{BAND_H - 44}"'
+            f'  <rect x="{x:.1f}" y="{y + 24}" width="1" height="{BAND_H - 72}"'
             f' fill="{marina.RULE}" opacity="0.7"/>'
         )
     return out
@@ -505,15 +523,7 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
         ys.append(y)
     rows_end = y
 
-    # the dial reads as the last item of the list — it explains the Commits row
-    # directly above it — so it sits in the right column, not under the logo
-    dial_y     = rows_end + 26
-    dial_cy    = dial_y + DIAL_R + 18
-    cap_y      = dial_y + 2 * (DIAL_R + 18) + 24
-    right_end  = cap_y + 6
-    left_stack = LOGO_SIZE
-
-    body_end = max(right_end, BODY_Y + left_stack)
+    body_end = max(rows_end, BODY_Y + LOGO_SIZE)
     band_y   = body_end + 30
     strip_y  = band_y + BAND_H + 16
     prompt_y = strip_y + 8 + 30
@@ -539,10 +549,10 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
         "    </linearGradient>",
         *[f"    {line}" for line in svgkit.sweep_gradient()],
         "    <style>",
-        f"      .k    {{ font: 600 13px {marina.FONT}; fill: {marina.HEADING}; }}",
-        f"      .v    {{ font: 400 13px {marina.FONT}; fill: {marina.INK}; }}",
-        f"      .u    {{ font: 700 15px {marina.FONT}; fill: {marina.TEAL}; }}",
-        f"      .d    {{ font: 700 15px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
+        f"      .k    {{ font: 600 14px {marina.FONT}; fill: {marina.HEADING}; }}",
+        f"      .v    {{ font: 400 14px {marina.FONT}; fill: {marina.INK}; }}",
+        f"      .u    {{ font: 700 16px {marina.FONT}; fill: {marina.TEAL}; }}",
+        f"      .d    {{ font: 700 16px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
         f"      .tick {{ font: 500 9px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
         f"      .cap  {{ font: 500 10px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
         f"      .pr   {{ font: 500 12px {marina.FONT}; }}",
@@ -604,18 +614,11 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
             f' fill="url(#sepRule)"/>'
         )
 
-    out += _dial((TEXT_X + RIGHT) / 2, dial_cy, by_hour)
     out.append(
-        f'  <text x="{(TEXT_X + RIGHT) / 2}" y="{cap_y:.1f}"'
-        f' class="cap" text-anchor="middle">commits by hour</text>'
+        f'\n  <rect x="{LEFT}" y="{band_y - 16:.1f}" width="{RIGHT - LEFT}" height="1"'
+        f' fill="url(#sepRule)"/>'
     )
-
-    if streak:
-        out.append(
-            f'\n  <rect x="{LEFT}" y="{band_y - 16:.1f}" width="{RIGHT - LEFT}" height="1"'
-            f' fill="url(#sepRule)"/>'
-        )
-        out += _band(band_y, streak)
+    out += _band(band_y, by_hour, streak)
 
     # palette strip, spanning exactly the content width
     strip = RIGHT - LEFT
