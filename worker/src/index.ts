@@ -6,13 +6,14 @@
 // and serves a stale one for up to a day while it refreshes in the background —
 // so a GitHub API hiccup shows yesterday's card rather than an error.
 
-import { profile, commitHours, streaks, avatar, views } from "./github";
+import { profile, commitHours, streaks, avatar, views, tzLabel, DEFAULT_TZ } from "./github";
 import { rows, render } from "./card";
 
 interface Env {
   GITHUB_TOKEN: string;
   GITHUB_USERNAME: string;
   NIXOS_REPO: string;
+  CARD_TZ?: string;
 }
 
 const MAX_AGE = 1800;        // 30 min fresh
@@ -30,10 +31,11 @@ function svgResponse(body: string, cached: boolean): Response {
 
 async function build(env: Env): Promise<string> {
   const login = env.GITHUB_USERNAME;
+  const tz = env.CARD_TZ || DEFAULT_TZ;
   const p = await profile(env.GITHUB_TOKEN, login, env.NIXOS_REPO);
 
   const [hours, pic, seen] = await Promise.all([
-    commitHours(env.GITHUB_TOKEN, p),
+    commitHours(env.GITHUB_TOKEN, p, tz),
     avatar(p.avatarUrl),
     views(login),
   ]);
@@ -41,7 +43,7 @@ async function build(env: Env): Promise<string> {
   const byHour = new Array(24).fill(0) as number[];
   for (const h of hours) byHour[h] += 1;
 
-  return render(rows(p, hours.length, seen), byHour, streaks(p.days), pic, login);
+  return render(rows(p, hours.length, seen), byHour, streaks(p.days, tz), pic, login, tzLabel(tz));
 }
 
 export default {

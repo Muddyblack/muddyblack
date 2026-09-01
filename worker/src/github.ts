@@ -10,7 +10,30 @@ const API = "https://api.github.com/graphql";
 const UA  = "muddyblack-card-worker";
 
 export const DAYS_BACK = 365;
-const TZ_OFFSET_MS = 3600_000; // UTC+1, fixed — matches the Python
+// A named zone, not a fixed offset — Germany is +1 in winter, +2 in summer.
+// GitHub exposes no timezone through either API, so this is configuration.
+export const DEFAULT_TZ = "Europe/Berlin";
+
+/** Minutes east of UTC for `tz` at `at`, DST included. */
+export function tzOffsetMinutes(tz: string, at: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz, hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(at);
+  const f = Object.fromEntries(parts.map((p) => [p.type, p.value])) as Record<string, string>;
+  const asUTC = Date.UTC(+f.year, +f.month - 1, +f.day, +f.hour, +f.minute, +f.second);
+  return Math.round((asUTC - at.getTime()) / 60000);
+}
+
+/** The zone's current offset, spelled the way the card shows it. */
+export function tzLabel(tz: string, at = new Date()): string {
+  const total = tzOffsetMinutes(tz, at);
+  const sign = total >= 0 ? "+" : "-";
+  const hours = Math.floor(Math.abs(total) / 60);
+  const minutes = Math.abs(total) % 60;
+  return minutes ? `utc${sign}${hours}:${String(minutes).padStart(2, "0")}` : `utc${sign}${hours}`;
+}
 const MAX_HISTORY_ROUNDS = 6;  // 600 commits per repo; one subrequest each
 
 export interface Repo {
@@ -82,7 +105,7 @@ export async function profile(token: string, login: string, configRepo: string):
     token,
     `query($login:String!, $owner:String!, $repo:String!) {
       user(login:$login) {
-        id login name location createdAt avatarUrl(size: 400)
+        id login name location createdAt avatarUrl(size: 200)
         repositories(first: 100, privacy: PUBLIC, ownerAffiliations: OWNER,
                      orderBy: {field: PUSHED_AT, direction: DESC}) {
           nodes { name isFork stargazerCount pushedAt }
@@ -131,7 +154,7 @@ export async function profile(token: string, login: string, configRepo: string):
  *  quietly undercount, and worse, would undercount differently from the Python
  *  generator. So this follows cursors until every repo is exhausted, in rounds:
  *  one subrequest per round regardless of how many repos still have pages. */
-export async function commitHours(token: string, p: Profile): Promise<number[]> {
+export async function commitHours(token: string, p: Profile, tz: string): Promise<number[]> {
   const cutoff = new Date(Date.now() - DAYS_BACK * 86400_000);
   const active = p.repos.filter((r) => new Date(r.pushedAt) >= cutoff);
   if (!active.length) return [];
@@ -161,7 +184,8 @@ export async function commitHours(token: string, p: Profile): Promise<number[]> 
       const history = data[`r${i}`]?.defaultBranchRef?.target?.history;
       if (!history) return;
       for (const n of history.nodes ?? []) {
-        hours.push(new Date(new Date(n.committedDate).getTime() + TZ_OFFSET_MS).getUTCHours());
+        const at = new Date(n.committedDate);
+        hours.push(new Date(at.getTime() + tzOffsetMinutes(tz, at) * 60000).getUTCHours());
       }
       if (history.pageInfo?.hasNextPage) {
         next.push({ name: repo.name, after: history.pageInfo.endCursor });
@@ -186,7 +210,7 @@ const dayKey = (d: Date) => d.toISOString().slice(0, 10);
 const shift  = (key: string, delta: number) =>
   dayKey(new Date(new Date(`${key}T00:00:00Z`).getTime() + delta * 86400_000));
 
-export function streaks(days: Map<string, number>): Streaks | null {
+export function streaks(days: Map<string, number>, tz: string): Streaks | null {
   const keys = [...days.keys()].sort();
   if (!keys.length) return null;
 
@@ -209,7 +233,8 @@ export function streaks(days: Map<string, number>): Streaks | null {
 
   // today counts only if it has contributions, but an empty today does not
   // break a streak that ran through yesterday
-  const today = dayKey(new Date(Date.now() + TZ_OFFSET_MS));
+  const now = new Date();
+  const today = dayKey(new Date(now.getTime() + tzOffsetMinutes(tz, now) * 60000));
   let cursor = (days.get(today) ?? 0) > 0 ? today : shift(today, -1);
   let current = 0;
   const end = cursor;
@@ -224,8 +249,8 @@ export async function avatar(url: string): Promise<string> {
   if (!res.ok) throw new Error(`avatar HTTP ${res.status}`);
   const bytes = new Uint8Array(await res.arrayBuffer());
   let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  for (let i = 0; i < bytes.length; i += 0x2000) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x2000) as unknown as number[]);
   }
   const type = res.headers.get("content-type") ?? "image/png";
   return `data:${type};base64,${btoa(binary)}`;

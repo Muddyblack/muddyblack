@@ -210,7 +210,7 @@ function dial(cx: number, cy: number, byHour: number[]): string[] {
  *  They were stacked, which cost ~110px of height to say two things that are
  *  both "activity". Four cells: the dial keeps its own, the three figures split
  *  what is left. */
-function band(y: number, byHour: number[], s: Streaks | null): string[] {
+function band(y: number, byHour: number[], s: Streaks | null, tz: string): string[] {
   const dialW = 170;
   const rest = (RIGHT - (LEFT + dialW)) / 3;
   const cols = [0, 1, 2].map((i) => LEFT + dialW + rest * (i + 0.5));
@@ -219,7 +219,7 @@ function band(y: number, byHour: number[], s: Streaks | null): string[] {
   out.push(...dial(LEFT + dialW / 2, y + 68, byHour));
   out.push(
     `  <text x="${pyf(LEFT + dialW / 2)}" y="${y + 148}" class="cap"` +
-      ' text-anchor="middle">commits by hour · utc+1</text>',
+      ` text-anchor="middle">commits by hour · ${tz}</text>`,
   );
   if (!s) return out;
 
@@ -335,6 +335,7 @@ function typing(y: number): string[] {
 
 export function render(
   rowList: Row[], byHour: number[], streak: Streaks | null, pic: string, login: string,
+  tz: string,
 ): string {
   const ys: (number | null)[] = [];
   const seps: number[] = [];
@@ -438,7 +439,7 @@ export function render(
   }
 
   out.push(`\n  <rect x="${LEFT}" y="${n1(bandY - 16)}" width="${RIGHT - LEFT}" height="1" fill="url(#sepRule)"/>`);
-  out.push(...band(bandY, byHour, streak));
+  out.push(...band(bandY, byHour, streak, tz));
 
   const seg = (RIGHT - LEFT - 6 * (m.ACCENTS.length - 1)) / m.ACCENTS.length;
   out.push("");

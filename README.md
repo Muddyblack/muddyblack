@@ -2,14 +2,19 @@
 
 <!-- The card is real SVG <text>, not a bitmap — but a browser will not let you
      select text inside an <img>. Linking to the raw file opens it as a document,
-     where it is selectable and searchable. -->
+     where it is selectable and searchable.
+
+     Currently served from the committed asset, refreshed weekly by
+     .github/workflows/update-assets.yml. To serve it live from the Worker,
+     point BOTH the href and the src at it:
+         https://muddyblack-card.<subdomain>.workers.dev/card.svg
+     See worker/README.md. Keep the workflow until the Worker has proven
+     itself — this file is the fallback. -->
 <a href="https://raw.githubusercontent.com/Muddyblack/muddyblack/master/assets/fastfetch.svg">
   <img src="assets/fastfetch.svg" alt="muddyblack@github" width="820" />
 </a>
 <br/>
 <br/>
-
-[![views](https://komarev.com/ghpvc/?username=Muddyblack&color=0EADCF&style=flat-square&label=views)](https://github.com/Muddyblack)
 
 </div>
 

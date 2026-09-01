@@ -3,21 +3,76 @@
 Serves the profile card as a live SVG, so the README no longer needs a daily
 commit to stay current.
 
-## Deploy
+## Setup, from nothing
+
+You need a Cloudflare account and a GitHub token. Neither costs anything and
+neither needs a card.
+
+**1. Cloudflare account** — sign up at <https://dash.cloudflare.com/sign-up>.
+Workers' free plan is enabled by default; you do not need a domain.
+
+**2. A GitHub token.** GitHub's GraphQL API rejects anonymous requests, so one is
+required even though everything read here is public. Give it as little power as
+possible: <https://github.com/settings/tokens> → *Generate new token (classic)* →
+tick **no scopes at all**. That should be enough for public profile, repo and
+contribution data — if a query comes back empty, add `read:user` and nothing
+more. Do not grant `repo`: the Worker asks for `privacy: PUBLIC` either way, so
+private scope changes nothing except the damage if the token leaks.
+
+**3. Install and log in.**
 
 ```sh
 cd worker
 npm install
-npx wrangler login
-npx wrangler secret put GITHUB_TOKEN     # classic token, `public_repo` is enough
+npx wrangler login          # opens a browser to authorise
+```
+
+If `npm install` complains about the wrangler version, `npm i -D wrangler@latest`.
+
+**4. Give it the token.** Stored encrypted by Cloudflare, never in the repo:
+
+```sh
+npx wrangler secret put GITHUB_TOKEN
+```
+
+**5. Try it locally first.**
+
+```sh
+cp .dev.vars.example .dev.vars    # then paste your token into it
+npx wrangler dev                  # http://localhost:8787/card.svg
+```
+
+This is the only way to exercise `caches.default` and `ctx.waitUntil`; the
+scripts under `test/` cover everything else without Cloudflare.
+
+**6. Deploy.**
+
+```sh
 npx wrangler deploy
 ```
 
-Then point the README at it:
+The first run asks you to pick a `workers.dev` subdomain, then prints the URL —
+something like `https://muddyblack-card.<subdomain>.workers.dev`. Check it:
+
+```sh
+curl -sI https://muddyblack-card.<subdomain>.workers.dev/card.svg | head -3
+```
+
+**7. Point the README at it.** In the repo root `README.md`, replace both the
+`href` and the `src`:
 
 ```html
-<img src="https://muddyblack-card.<your-subdomain>.workers.dev/card.svg" width="820" />
+<a href="https://muddyblack-card.<subdomain>.workers.dev/card.svg">
+  <img src="https://muddyblack-card.<subdomain>.workers.dev/card.svg"
+       alt="muddyblack@github" width="820" />
+</a>
 ```
+
+Leave `scripts/` and the weekly workflow alone until you have watched the Worker
+hold up for a few days — the committed `assets/fastfetch.svg` is the fallback,
+and reverting is a one-line edit while it still exists.
+
+`npx wrangler tail` streams live logs if something misbehaves.
 
 ## Why GraphQL and not REST
 
@@ -42,8 +97,44 @@ without a commit, but not instantly — expect it to lag by camo's TTL plus up t
 If the GitHub API errors, the Worker serves the last cached card rather than a
 broken image. It only returns 500 when nothing has ever been cached.
 
-## Limits
+## Testing before you deploy
 
-Free plan: 100k requests/day, 50 subrequests per request, 10ms CPU. Rendering is
-string concatenation, so CPU is not close to the limit; the avatar is inlined as
-a data: URI (~250KB), which is bandwidth rather than CPU.
+```sh
+worker/test/run.sh bench    # steady-state render CPU vs the free-plan budget
+GITHUB_TOKEN=… worker/test/run.sh e2e   # real API call, writes /tmp/card.svg
+tests/parity.sh             # this renderer vs the Python one, byte for byte
+```
+
+`e2e` exercises the real queries, the streak maths and the renderer. It does not
+exercise the Cloudflare-only parts (`caches.default`, `ctx.waitUntil`) — for
+those, `npx wrangler dev` and hit http://localhost:8787/card.svg.
+
+## The free plan
+
+Measured, not guessed (`worker/test/run.sh bench` on the fixture):
+
+| Limit | Budget | Actual |
+|---|---|---|
+| CPU per request | 10 ms | render p50 **0.59 ms**, p95 1.75 ms; avatar base64 0.17 ms |
+| Subrequests per request | 50 | **4–11** (1 profile + ≤6 history rounds + avatar + views) |
+| Requests | 100k/day | not close |
+
+A word on that CPU figure: a *single* cold call measures V8 compiling the
+renderer and reads ~30 ms, which looks like a failure. Workers reuses a warm
+isolate across requests, so steady state is what the limit applies to. Benchmark
+warm, or you will draw the wrong conclusion and go shopping for another host.
+
+**The one real gotcha: `caches.default` does nothing on a `workers.dev`
+subdomain.** Cache API operations there are silently no-ops, so every request
+rebuilds the card — roughly 8 GitHub API calls each. What still protects you is
+the `Cache-Control` header, which GitHub's camo and browsers do honour, and camo
+is what actually sits in front of this. If you want real edge caching, put the
+Worker on a custom domain (a route on any zone you have in Cloudflare); the code
+needs no change.
+
+## Weight
+
+The avatar is inlined as a data: URI, because an SVG behind camo cannot
+reference anything external. It is fetched at 200px for a 150px slot: 400px made
+it 222 KB of a 246 KB card, and dropping to 200 took the whole card to **88 KB**
+with no visible loss.

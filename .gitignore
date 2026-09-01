@@ -11,3 +11,6 @@ dist/
 # editors / os
 .DS_Store
 *.swp
+.direnv/
+.envrc
+.envrc.*

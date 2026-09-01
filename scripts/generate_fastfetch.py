@@ -22,6 +22,7 @@ import os
 import re
 import sys
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -58,7 +59,11 @@ GAP_STEP   = 18
 HEAD_Y     = 62                 # "user@host" baseline
 BODY_Y     = HEAD_Y + 26        # first row sits one step below this
 
-TZ_OFFSET  = timezone(timedelta(hours=1))   # UTC+1 (Germany / France)
+# A named zone, not a fixed offset: Germany is +1 in winter and +2 in summer,
+# and a hardcoded +1 silently shifted every hour bucket for ~7 months a year.
+# GitHub does not expose the profile's timezone through either API — the clock
+# on the profile page is a client-side setting — so this is configuration.
+CARD_TZ    = ZoneInfo(os.environ.get("CARD_TZ", "Europe/Berlin"))
 
 # The intro that used to be a readme-typing-svg request. It belongs in the card:
 # a terminal is exactly where a line gets typed.
@@ -192,7 +197,7 @@ def streaks(days: dict[date, int]):
 
     # today counts only if it has contributions, but an empty today does not
     # break a streak that ran through yesterday
-    today  = date.today()
+    today  = datetime.now(CARD_TZ).date()
     cursor = today if days.get(today, 0) > 0 else today - timedelta(days=1)
     current, end = 0, cursor
     while days.get(cursor, 0) > 0:
@@ -210,6 +215,14 @@ def contributions():
 
 
 # ── Facts ─────────────────────────────────────────────────────────────────────
+
+def tz_label(tz) -> str:
+    """The zone's *current* offset, so the card says utc+2 in summer."""
+    total = int(datetime.now(tz).utcoffset().total_seconds() // 60)
+    sign  = "+" if total >= 0 else "-"
+    hours, minutes = divmod(abs(total), 60)
+    return f"utc{sign}{hours}" if not minutes else f"utc{sign}{hours}:{minutes:02d}"
+
 
 def uptime(created: str) -> str:
     start = datetime.fromisoformat(created.replace("Z", "+00:00"))
@@ -252,7 +265,7 @@ def commit_hours() -> list[int]:
                                 f"?author={USERNAME}&since={since}"):
             when = datetime.fromisoformat(
                 commit["commit"]["author"]["date"].replace("Z", "+00:00")
-            ).astimezone(TZ_OFFSET)
+            ).astimezone(CARD_TZ)
             hours.append(when.hour)
 
     return hours
@@ -357,7 +370,9 @@ FLAME = ("M0,-10 C4.2,-5.6 7.3,-2.2 7.3,2 A7.3,7.3 0 0 1 -7.3,2 "
 
 def avatar(url: str) -> str:
     """The profile picture as a data: URI — the SVG has to stand alone."""
-    req = Request(f"{url}&s=400" if "?" in url else f"{url}?s=400",
+    # 200px for a 150px slot: enough for a hidpi screen without the file
+    # weight of a 400px source, which was most of the SVG
+    req = Request(f"{url}&s=200" if "?" in url else f"{url}?s=200",
                   headers={"User-Agent": "fastfetch-card-generator"})
     with urlopen(req, timeout=30) as r:
         return ("data:image/png;base64,"
@@ -463,7 +478,7 @@ def _dial(cx: float, cy: float, by_hour: list[int]) -> list[str]:
 
 # ── the streak band ───────────────────────────────────────────────────────────
 
-def _band(y: float, by_hour: list[int], streak) -> list[str]:
+def _band(y: float, by_hour: list[int], streak, tz: str) -> list[str]:
     """The clock and the streak figures on one line.
 
     They were stacked, which cost ~110px of height to say two things that are
@@ -478,7 +493,7 @@ def _band(y: float, by_hour: list[int], streak) -> list[str]:
     out += _dial(LEFT + dial_w / 2, y + 68, by_hour)
     out.append(
         f'  <text x="{LEFT + dial_w / 2}" y="{y + 148}" class="cap"'
-        ' text-anchor="middle">commits by hour · utc+1</text>'
+        f' text-anchor="middle">commits by hour · {tz}</text>'
     )
 
     if not streak:
@@ -610,7 +625,7 @@ def _typing(y: float) -> list[str]:
     return out
 
 
-def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
+def _svg(rows, by_hour: list[int], streak, pic: str, tz: str) -> str:
     ys, seps = [], []
     y = BODY_Y
     for key, _ in rows:
@@ -720,7 +735,7 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
         f'\n  <rect x="{LEFT}" y="{band_y - 16:.1f}" width="{RIGHT - LEFT}" height="1"'
         f' fill="url(#sepRule)"/>'
     )
-    out += _band(band_y, by_hour, streak)
+    out += _band(band_y, by_hour, streak, tz)
 
     # palette strip, spanning exactly the content width
     strip = RIGHT - LEFT
@@ -763,7 +778,7 @@ def main():
 
     # render before opening the file: "w" truncates, so building the SVG inside
     # the with-block leaves a 0-byte asset behind if anything raises
-    svg      = _svg(rows, by_hour, streak, pic)
+    svg      = _svg(rows, by_hour, streak, pic, tz_label(CARD_TZ))
     out_path = os.path.normpath(OUTPUT)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(svg)

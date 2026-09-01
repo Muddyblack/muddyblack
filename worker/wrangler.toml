@@ -10,6 +10,8 @@ compatibility_date = "2026-08-01"
 [vars]
 GITHUB_USERNAME = "Muddyblack"
 NIXOS_REPO      = "Muddyblack/NixOS"
+# IANA zone for the hour breakdown; DST is handled, so do not use an offset.
+CARD_TZ         = "Europe/Berlin"
 
 [observability]
 enabled = true

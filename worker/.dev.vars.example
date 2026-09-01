@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit the real file — .gitignore
+# already excludes it.
+GITHUB_TOKEN=ghp_your_token_here

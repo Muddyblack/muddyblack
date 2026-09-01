@@ -25,4 +25,4 @@ streak = (
 )
 rows = [tuple(r) for r in fx["rows"]]
 
-sys.stdout.write(g._svg(rows, fx["byHour"], streak, fx["pic"]))
+sys.stdout.write(g._svg(rows, fx["byHour"], streak, fx["pic"], fx["tzLabel"]))
