@@ -6,8 +6,11 @@
 // and serves a stale one for up to a day while it refreshes in the background —
 // so a GitHub API hiccup shows yesterday's card rather than an error.
 
-import { profile, commitHours, streaks, avatar, views, tzLabel, DEFAULT_TZ } from "./github";
+import {
+  profile, commitHours, langWeights, streaks, avatar, views, tzLabel, DEFAULT_TZ,
+} from "./github";
 import { rows, render } from "./card";
+import { fold, render as renderLangs } from "./languages";
 
 interface Env {
   GITHUB_TOKEN: string;
@@ -29,7 +32,7 @@ function svgResponse(body: string, cached: boolean): Response {
   });
 }
 
-async function build(env: Env): Promise<string> {
+async function buildCard(env: Env): Promise<string> {
   const login = env.GITHUB_USERNAME;
   const tz = env.CARD_TZ || DEFAULT_TZ;
   const p = await profile(env.GITHUB_TOKEN, login, env.NIXOS_REPO);
@@ -46,6 +49,23 @@ async function build(env: Env): Promise<string> {
   return render(rows(p, hours.length, seen), byHour, streaks(p.days, tz), pic, login, tzLabel(tz));
 }
 
+async function buildLanguages(env: Env): Promise<string> {
+  const p = await profile(env.GITHUB_TOKEN, env.GITHUB_USERNAME, env.NIXOS_REPO);
+  const { ranked, commits, repos } = await langWeights(env.GITHUB_TOKEN, p);
+  // Same rule as the generator: never publish an empty treemap. Throwing here
+  // hands the request to the stale-cache fallback below.
+  if (!ranked.length) throw new Error("no language data");
+  const { tiles, tail } = fold(ranked);
+  return renderLangs(tiles, tail, commits, repos);
+}
+
+/** Path → builder. Everything else is a 404. */
+const ROUTES: Record<string, (env: Env) => Promise<string>> = {
+  "/": buildCard,
+  "/card.svg": buildCard,
+  "/languages.svg": buildLanguages,
+};
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -53,7 +73,8 @@ export default {
     if (url.pathname === "/health") {
       return new Response("ok", { headers: { "Cache-Control": "no-store" } });
     }
-    if (url.pathname !== "/" && url.pathname !== "/card.svg") {
+    const build = ROUTES[url.pathname];
+    if (!build) {
       return new Response("not found", { status: 404 });
     }
     if (!env.GITHUB_TOKEN) {
@@ -62,8 +83,10 @@ export default {
       });
     }
 
+    // "/" and "/card.svg" are the same image, so they share one cache entry.
     const cache = caches.default;
-    const key = new Request(new URL("/card.svg", url.origin).toString(), { method: "GET" });
+    const path = build === buildCard ? "/card.svg" : url.pathname;
+    const key = new Request(new URL(path, url.origin).toString(), { method: "GET" });
 
     const hit = await cache.match(key);
     if (hit) {
@@ -91,7 +114,7 @@ export default {
       // and only 500 if there is genuinely nothing to show.
       const stale = await cache.match(key, { ignoreMethod: true });
       if (stale) return stale;
-      return new Response(`card build failed: ${(err as Error).message}`, {
+      return new Response(`${url.pathname} build failed: ${(err as Error).message}`, {
         status: 500,
         headers: { "Cache-Control": "no-store" },
       });

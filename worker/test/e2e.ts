@@ -2,8 +2,11 @@
 // outside Cloudflare. Proves the queries, the streak maths and the renderer;
 // does not prove Cloudflare-specific bits (caches.default, ctx.waitUntil).
 import { writeFileSync } from "node:fs";
-import { profile, commitHours, streaks, avatar, views, tzLabel, DEFAULT_TZ } from "./github.ts";
+import {
+  profile, commitHours, langWeights, streaks, avatar, views, tzLabel, DEFAULT_TZ,
+} from "./github.ts";
 import { rows, render } from "./card.ts";
+import { fold, render as renderLangs } from "./languages.ts";
 
 const token = process.env.GITHUB_TOKEN!;
 const login = "Muddyblack";
@@ -38,3 +41,12 @@ console.error(`  timezone               ${tz} -> ${tzLabel(tz)}`);
 console.error(`  avatar data URI        ${(pic.length / 1024).toFixed(0)} KB`);
 console.error(`  svg out                ${(svg.length / 1024).toFixed(0)} KB`);
 writeFileSync(process.argv[2], svg);
+
+// the second card, on the same profile query the Worker reuses
+mark = Date.now();
+const { ranked, commits, repos } = await langWeights(token, p);
+t("\nlanguage weights", Date.now() - mark);
+const { tiles, tail } = fold(ranked);
+console.error(`  languages              ${tiles.map(([l]) => l.toLowerCase()).join(" · ")}`);
+console.error(`  weighted by            ${commits} commits across ${repos} repos`);
+writeFileSync(process.argv[3], renderLangs(tiles, tail, commits, repos));

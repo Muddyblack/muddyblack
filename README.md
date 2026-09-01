@@ -1,15 +1,13 @@
 <div align="center">
 
-<!-- The card is real SVG <text>, not a bitmap — but a browser will not let you
+<!-- The cards are real SVG <text>, not bitmaps — but a browser will not let you
      select text inside an <img>. Linking to the raw file opens it as a document,
      where it is selectable and searchable.
 
-     Currently served from the committed asset, refreshed weekly by
-     .github/workflows/update-assets.yml. To serve it live from the Worker,
-     point BOTH the href and the src at it:
-         https://muddyblack-card.<subdomain>.workers.dev/card.svg
-     See worker/README.md. Keep the workflow until the Worker has proven
-     itself — this file is the fallback. -->
+     Both cards are served live by the Worker (/card.svg and /languages.svg);
+     see worker/README.md. The committed assets/ copies stay as the fallback,
+     refreshed weekly by .github/workflows/update-assets.yml — point a src back
+     at assets/ if the Worker is ever down. -->
 <a href="https://muddyblack-card.muddyblack.workers.dev/card.svg">
   <img src="https://muddyblack-card.muddyblack.workers.dev/card.svg" alt="muddyblack@github" width="820" />
 </a>
@@ -22,11 +20,15 @@
 
 <div align="center">
 
-<img src="assets/languages.svg" alt="languages by commit weight" width="820" />
+<a href="https://muddyblack-card.muddyblack.workers.dev/languages.svg">
+  <img src="https://muddyblack-card.muddyblack.workers.dev/languages.svg" alt="languages by commit weight" width="820" />
+</a>
 
 <br/>
 
 </div>
+
+<br/>
 
 <p align="center"><img src="assets/dividers/divider-pcb.svg" alt="" width="100%" /></p>
 

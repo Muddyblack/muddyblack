@@ -1,7 +1,12 @@
 # muddyblack-card
 
-Serves the profile card as a live SVG, so the README no longer needs a daily
-commit to stay current.
+Serves the README's cards as live SVGs, so it no longer needs a daily commit to
+stay current.
+
+| Route | Card | Python fallback |
+|---|---|---|
+| `/card.svg` (and `/`) | the fastfetch profile card | `scripts/generate_fastfetch.py` |
+| `/languages.svg` | languages by commit weight | `scripts/generate_lang_treemap.py` |
 
 ## Setup, from nothing
 
@@ -59,18 +64,23 @@ curl -sI https://muddyblack-card.<subdomain>.workers.dev/card.svg | head -3
 ```
 
 **7. Point the README at it.** In the repo root `README.md`, replace both the
-`href` and the `src`:
+`href` and the `src`, for each card:
 
 ```html
 <a href="https://muddyblack-card.<subdomain>.workers.dev/card.svg">
   <img src="https://muddyblack-card.<subdomain>.workers.dev/card.svg"
        alt="muddyblack@github" width="820" />
 </a>
+<a href="https://muddyblack-card.<subdomain>.workers.dev/languages.svg">
+  <img src="https://muddyblack-card.<subdomain>.workers.dev/languages.svg"
+       alt="languages by commit weight" width="820" />
+</a>
 ```
 
 Leave `scripts/` and the weekly workflow alone until you have watched the Worker
-hold up for a few days — the committed `assets/fastfetch.svg` is the fallback,
-and reverting is a one-line edit while it still exists.
+hold up for a few days — the committed `assets/fastfetch.svg` and
+`assets/languages.svg` are the fallback, and reverting is a one-line edit while
+they still exist.
 
 `npx wrangler tail` streams live logs if something misbehaves.
 
@@ -83,6 +93,12 @@ worst way for it to fail. The Worker batches the same data into two GraphQL
 queries (repos + calendar + `flake.nix` in one, commit history for every active
 repo aliased into the next) plus one fetch for the avatar. Three subrequests.
 
+The treemap is the same story, worse: `generate_lang_treemap.py` spends *two*
+REST calls per repo (a commit count and a language breakdown). The Worker gets
+the byte counts free — they ride along on the profile query — and asks for every
+repo's commit `totalCount` in one aliased query. Two subrequests for
+`/languages.svg`.
+
 ## Freshness
 
 `Cache-Control: public, max-age=1800, stale-while-revalidate=86400`.
@@ -94,15 +110,15 @@ without a commit, but not instantly — expect it to lag by camo's TTL plus up t
 
 ## Failure behaviour
 
-If the GitHub API errors, the Worker serves the last cached card rather than a
-broken image. It only returns 500 when nothing has ever been cached.
+If the GitHub API errors, the Worker serves that route's last cached card rather
+than a broken image. It only returns 500 when nothing has ever been cached.
 
 ## Testing before you deploy
 
 ```sh
 worker/test/run.sh bench    # steady-state render CPU vs the free-plan budget
-GITHUB_TOKEN=… worker/test/run.sh e2e   # real API call, writes /tmp/card.svg
-tests/parity.sh             # this renderer vs the Python one, byte for byte
+GITHUB_TOKEN=… worker/test/run.sh e2e   # real API call, writes /tmp/*.svg
+tests/parity.sh             # both renderers vs the Python ones, byte for byte
 ```
 
 `e2e` exercises the real queries, the streak maths and the renderer. It does not
@@ -116,7 +132,7 @@ Measured, not guessed (`worker/test/run.sh bench` on the fixture):
 | Limit | Budget | Actual |
 |---|---|---|
 | CPU per request | 10 ms | render p50 **0.59 ms**, p95 1.75 ms; avatar base64 0.17 ms |
-| Subrequests per request | 50 | **4–11** (1 profile + ≤6 history rounds + avatar + views) |
+| Subrequests per request | 50 | `/card.svg` **4–11** (1 profile + ≤6 history rounds + avatar + views); `/languages.svg` **2** |
 | Requests | 100k/day | not close |
 
 A word on that CPU figure: a *single* cold call measures V8 compiling the

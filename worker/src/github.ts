@@ -41,6 +41,8 @@ export interface Repo {
   isFork: boolean;
   stars: number;
   pushedAt: string;
+  /** Byte counts per language, largest first — GitHub's own linguist figures. */
+  languages: { name: string; size: number }[];
 }
 
 export interface Profile {
@@ -108,7 +110,12 @@ export async function profile(token: string, login: string, configRepo: string):
         id login name location createdAt avatarUrl(size: 200)
         repositories(first: 100, privacy: PUBLIC, ownerAffiliations: OWNER,
                      orderBy: {field: PUSHED_AT, direction: DESC}) {
-          nodes { name isFork stargazerCount pushedAt }
+          nodes {
+            name isFork stargazerCount pushedAt
+            languages(first: 20, orderBy: {field: SIZE, direction: DESC}) {
+              edges { size node { name } }
+            }
+          }
         }
         ${calendarFields}
       }
@@ -142,6 +149,7 @@ export async function profile(token: string, login: string, configRepo: string):
     avatarUrl: u.avatarUrl,
     repos: u.repositories.nodes.map((r: any) => ({
       name: r.name, isFork: r.isFork, stars: r.stargazerCount, pushedAt: r.pushedAt,
+      languages: (r.languages?.edges ?? []).map((e: any) => ({ name: e.node.name, size: e.size })),
     })),
     channel: match ? match[1].replace("nixos-", "") : "unstable",
     days,
@@ -195,6 +203,58 @@ export async function commitHours(token: string, p: Profile, tz: string): Promis
   }
 
   return hours;
+}
+
+export interface LangWeights {
+  ranked: [string, number][];
+  commits: number;
+  repos: number;
+}
+
+/** The treemap's data, in one subrequest.
+ *
+ *  A port of generate_lang_treemap.py's collect(): weigh each repo by the
+ *  commits *you* pushed to it inside the window, then split that weight across
+ *  the repo's language mix. The Python version needs two REST calls per repo;
+ *  the byte counts already came down with the profile query, so all that is
+ *  left is one aliased GraphQL call asking each active repo for a totalCount. */
+export async function langWeights(token: string, p: Profile): Promise<LangWeights> {
+  const cutoff = new Date(Date.now() - DAYS_BACK * 86400_000);
+  const active = p.repos.filter(
+    (r) => !r.isFork && r.languages.length && new Date(r.pushedAt) >= cutoff,
+  );
+  if (!active.length) return { ranked: [], commits: 0, repos: 0 };
+
+  const fields = active
+    .map((r, i) =>
+      `r${i}: repository(owner: $login, name: "${r.name}") { ` +
+      `defaultBranchRef { target { ... on Commit { ` +
+      `history(since: $since, author: {id: $uid}) { totalCount } } } } }`)
+    .join("\n      ");
+
+  const data = await graphql<any>(
+    token,
+    `query($login:String!, $uid:ID!, $since:GitTimestamp!) {\n      ${fields}\n    }`,
+    { login: p.login, uid: p.id, since: iso(cutoff) },
+  );
+
+  const weights = new Map<string, number>();
+  let commits = 0, repos = 0;
+
+  active.forEach((repo, i) => {
+    const count = data[`r${i}`]?.defaultBranchRef?.target?.history?.totalCount ?? 0;
+    if (!count) return;
+    const bytes = repo.languages.reduce((sum, l) => sum + l.size, 0);
+    if (!bytes) return;
+    commits += count;
+    repos += 1;
+    for (const l of repo.languages) {
+      weights.set(l.name, (weights.get(l.name) ?? 0) + (count * l.size) / bytes);
+    }
+  });
+
+  const ranked = [...weights.entries()].sort((a, b) => b[1] - a[1]);
+  return { ranked, commits, repos };
 }
 
 export interface Streaks {

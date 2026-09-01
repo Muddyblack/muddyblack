@@ -1,0 +1,20 @@
+{
+  "ranked": [
+    ["Nix", 412.5],
+    ["Python", 268.25],
+    ["TypeScript", 191.0],
+    ["QML", 143.75],
+    ["Shell", 88.5],
+    ["JavaScript", 61.25],
+    ["CSS", 34.0],
+    ["HTML", 21.5],
+    ["Lua", 9.75],
+    ["Rust", 6.5],
+    ["Dockerfile", 3.25],
+    ["Makefile", 2.0],
+    ["C", 1.25],
+    ["Vim Script", 0.5]
+  ],
+  "commits": 1274,
+  "repos": 19
+}
