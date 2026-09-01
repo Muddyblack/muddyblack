@@ -1,0 +1,15 @@
+name = "muddyblack-card"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# GITHUB_TOKEN is a secret, not a var — set it with:
+#   npx wrangler secret put GITHUB_TOKEN
+# It needs no scopes at all for public data; a classic token with `public_repo`
+# is plenty. Never put it in this file.
+
+[vars]
+GITHUB_USERNAME = "Muddyblack"
+NIXOS_REPO      = "Muddyblack/NixOS"
+
+[observability]
+enabled = true

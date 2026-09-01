@@ -1,1 +1,13 @@
-__pycache__
+# python
+__pycache__/
+*.py[cod]
+
+# worker
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+
+# editors / os
+.DS_Store
+*.swp

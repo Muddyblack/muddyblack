@@ -1,13 +1,12 @@
 <div align="center">
 
-<a href="https://github.com/Muddyblack">
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=22&pause=1200&color=0EADCF&center=true&vCenter=true&width=620&lines=hey%2C+i'm+Christian;hobby+dev+%26+network+enthusiast;i+build+the+tools+i+wish+existed+(when+i+have+time);nixos-rice+%C2%B7+kde+widgets+%C2%B7+web+%C2%B7+network+labs" alt="" />
+<!-- The card is real SVG <text>, not a bitmap — but a browser will not let you
+     select text inside an <img>. Linking to the raw file opens it as a document,
+     where it is selectable and searchable. -->
+<a href="https://raw.githubusercontent.com/Muddyblack/muddyblack/master/assets/fastfetch.svg">
+  <img src="assets/fastfetch.svg" alt="muddyblack@github" width="820" />
 </a>
-
 <br/>
-
-<img src="assets/fastfetch.svg" alt="muddyblack@github" width="820" />
-
 <br/>
 
 [![views](https://komarev.com/ghpvc/?username=Muddyblack&color=0EADCF&style=flat-square&label=views)](https://github.com/Muddyblack)
@@ -31,3 +30,10 @@
 *"There are two ways to write error-free programs; only the third works."* — Alan J. Perlis
 
 </div>
+
+<!-- komarev counts a view by being fetched, so it only keeps counting while
+     something here still requests it. Kept at 1x1 rather than removed: the
+     tally carries on climbing in the background, so if this ever goes back to
+     being a visible badge it picks up from a real number instead of restarting.
+     Do not delete unless you are happy to lose the count. -->
+<img src="https://komarev.com/ghpvc/?username=Muddyblack&style=flat-square" alt="" width="1" height="1" />

@@ -48,17 +48,30 @@ STATIC = {
 }
 
 W          = 820
-LEFT       = 88                 # logo edge; the card's content margin
-RIGHT      = W - 88
+LEFT       = 40                 # logo edge; the card's content margin
+RIGHT      = W - 40
 LOGO_SIZE  = 150
-TEXT_X     = 272                # key column
-VAL_X      = 360                # value column
-ROW_STEP   = 24
+TEXT_X     = 224                # key column
+VAL_X      = 320                # value column
+ROW_STEP   = 26
 GAP_STEP   = 18
 HEAD_Y     = 62                 # "user@host" baseline
 BODY_Y     = HEAD_Y + 26        # first row sits one step below this
 
 TZ_OFFSET  = timezone(timedelta(hours=1))   # UTC+1 (Germany / France)
+
+# The intro that used to be a readme-typing-svg request. It belongs in the card:
+# a terminal is exactly where a line gets typed.
+TYPING = [
+    "hey, i'm Christian",
+    "hobby dev & network enthusiast",
+    "i build the tools i wish existed (when i have time)",
+    "nixos-rice · kde widgets · web · network labs",
+]
+TYPE_ADV  = 8.4     # JetBrains Mono advance at 14px
+TYPE_IN   = 1.1     # seconds spent typing a line
+TYPE_OUT  = 0.5     # seconds spent deleting it
+TYPE_SLOT = 4.6     # seconds per line, all in
 
 DIAL_R     = 46
 DIAL_HUB   = 13
@@ -245,6 +258,28 @@ def commit_hours() -> list[int]:
     return hours
 
 
+def views() -> int | None:
+    """The profile-view tally.
+
+    The README keeps a 1x1 komarev pixel, so that count still tracks real
+    views; this only reads it back. Reading is also what the Worker does, so
+    both renderers show the same number instead of each keeping its own.
+
+    Returns None when komarev cannot be reached — the row is dropped rather
+    than shown wrong, and one missing line beats a fabricated figure.
+    """
+    url = f"https://komarev.com/ghpvc/?username={USERNAME}&style=flat-square"
+    try:
+        req = Request(url, headers={"User-Agent": "fastfetch-card-generator"})
+        with urlopen(req, timeout=15) as r:
+            text = r.read().decode("utf-8", "replace")
+    except OSError as e:
+        print(f"views unavailable: {e}", file=sys.stderr)
+        return None
+    found = re.findall(r">([\d,]+)</text>", text)
+    return int(found[-1].replace(",", "")) if found else None
+
+
 def collect(total_commits: int):
     user = _get(f"/users/{USERNAME}")
     if not user:
@@ -278,10 +313,18 @@ def collect(total_commits: int):
     ]
     if stars:
         rows.append(("Stars", f"{stars}"))
+    seen = views()
+    if seen is not None:
+        rows.append(("Views", f"{seen:,}"))
     rows += [
         ("Locale",   STATIC["Locale"]),
         gap,
-        ("Commits",  f"{total_commits:,} · last {DAYS_BACK} days · utc+1"),
+        # Deliberately narrow, and labelled as such: this counts commits I
+        # authored on the default branch of my *public* repos. GitHub's own
+        # contribution graph is a different, larger number — it also counts
+        # private repos, PRs, issues and reviews. Claiming that number here
+        # while showing this one's hour breakdown would be a lie.
+        ("Commits",  f"{total_commits:,} · in public repos · {DAYS_BACK}d"),
     ]
     return rows, avatar(user["avatar_url"])
 
@@ -427,7 +470,7 @@ def _band(y: float, by_hour: list[int], streak) -> list[str]:
     both "activity". Four cells: the dial keeps its own, the three figures split
     what is left.
     """
-    dial_w = 160
+    dial_w = 170
     rest   = (RIGHT - (LEFT + dial_w)) / 3
     cols   = [LEFT + dial_w + rest * (i + 0.5) for i in range(3)]
 
@@ -435,7 +478,7 @@ def _band(y: float, by_hour: list[int], streak) -> list[str]:
     out += _dial(LEFT + dial_w / 2, y + 68, by_hour)
     out.append(
         f'  <text x="{LEFT + dial_w / 2}" y="{y + 148}" class="cap"'
-        ' text-anchor="middle">commits by hour</text>'
+        ' text-anchor="middle">commits by hour · utc+1</text>'
     )
 
     if not streak:
@@ -506,7 +549,64 @@ def _prompt(y: float) -> list[str]:
         f'  <rect x="{rule_x:g}" y="{y - 5}" width="{RIGHT - 14 - rule_x:g}" height="1.2"'
         f' rx="0.6" fill="url(#promptFade)"/>'
     )
-    out += [f"  {line}" for line in svgkit.cursor(RIGHT - 8, y - 10)]
+    return out
+
+
+def _typing(y: float) -> list[str]:
+    """The intro, typed at a prompt on its own line.
+
+    Base state is the first line, fully typed, with the cursor parked at its
+    end — so a renderer that ignores SMIL shows a finished line rather than an
+    empty one.
+    """
+    n     = len(TYPING)
+    total = n * TYPE_SLOT
+    x0    = LEFT + 20
+
+    out = ["", "  <!-- the intro, typed -->",
+           f'  <text x="{LEFT}" y="{y}" class="ty" fill="{marina.TEAL}">&#10095;</text>']
+
+    times: list[float] = []
+    xs: list[float] = []
+
+    for i, phrase in enumerate(TYPING):
+        w         = len(phrase) * TYPE_ADV
+        start     = i * TYPE_SLOT / total
+        typed     = (i * TYPE_SLOT + TYPE_IN) / total
+        deleting  = ((i + 1) * TYPE_SLOT - TYPE_OUT) / total
+        end       = (i + 1) * TYPE_SLOT / total
+
+        kt = f"0;{start:.4f};{typed:.4f};{deleting:.4f};{end:.4f};1"
+        out += [
+            f'  <clipPath id="type{i}">'
+            f'<rect x="{x0}" y="{y - 12}" width="{w if i == 0 else 0:.1f}" height="16">',
+            f'    <animate attributeName="width" values="0;0;{w:.1f};{w:.1f};0;0"'
+            f' keyTimes="{kt}" dur="{total:g}s" repeatCount="indefinite"'
+            ' calcMode="linear"/>',
+            "  </rect></clipPath>",
+            f'  <g clip-path="url(#type{i})" opacity="{1 if i == 0 else 0}">',
+            f'    <animate attributeName="opacity" values="0;1;1;0;0"'
+            f' keyTimes="0;{start:.4f};{deleting:.4f};{end:.4f};1" dur="{total:g}s"'
+            ' repeatCount="indefinite" calcMode="discrete"/>',
+            f'    <text x="{x0}" y="{y}" class="ty" textLength="{w:.1f}"'
+            f' lengthAdjust="spacingAndGlyphs">{esc(phrase)}</text>',
+            "  </g>",
+        ]
+
+        times += [start, typed, deleting, end]
+        xs    += [x0, x0 + w, x0 + w, x0]
+
+    first_w = len(TYPING[0]) * TYPE_ADV
+    out += [
+        f'  <rect x="{x0 + first_w:.1f}" y="{y - 11}" width="8" height="13" rx="1"'
+        f' fill="{marina.TEAL}">',
+        f'    <animate attributeName="x" values="{";".join(f"{v:.1f}" for v in xs)}"'
+        f' keyTimes="{";".join(f"{t:.4f}" for t in times)}" dur="{total:g}s"'
+        ' repeatCount="indefinite" calcMode="linear"/>',
+        '    <animate attributeName="opacity" values="1;1;0;0" dur="1.1s"'
+        ' repeatCount="indefinite"/>',
+        "  </rect>",
+    ]
     return out
 
 
@@ -527,7 +627,8 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
     band_y   = body_end + 30
     strip_y  = band_y + BAND_H + 16
     prompt_y = strip_y + 8 + 30
-    h        = prompt_y + 30
+    typing_y = prompt_y + 26
+    h        = typing_y + 26
 
     aria = "; ".join(f"{k}: {v}" for k, v in rows if k)
 
@@ -549,17 +650,18 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
         "    </linearGradient>",
         *[f"    {line}" for line in svgkit.sweep_gradient()],
         "    <style>",
-        f"      .k    {{ font: 600 14px {marina.FONT}; fill: {marina.HEADING}; }}",
-        f"      .v    {{ font: 400 14px {marina.FONT}; fill: {marina.INK}; }}",
-        f"      .u    {{ font: 700 16px {marina.FONT}; fill: {marina.TEAL}; }}",
-        f"      .d    {{ font: 700 16px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
-        f"      .tick {{ font: 500 9px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
-        f"      .cap  {{ font: 500 10px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
+        f"      .k    {{ font: 600 16px {marina.FONT}; fill: {marina.HEADING}; }}",
+        f"      .v    {{ font: 400 16px {marina.FONT}; fill: {marina.INK}; }}",
+        f"      .u    {{ font: 700 18px {marina.FONT}; fill: {marina.TEAL}; }}",
+        f"      .d    {{ font: 700 18px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
+        f"      .tick {{ font: 500 10px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
+        f"      .cap  {{ font: 500 11px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
         f"      .pr   {{ font: 500 12px {marina.FONT}; }}",
-        f"      .fig  {{ font: 700 21px {marina.FONT}; fill: {marina.CYAN}; }}",
-        f"      .figl {{ font: 600 11px {marina.FONT}; fill: {marina.INK}; }}",
-        f"      .figs {{ font: 500 10px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
-        f"      .ring {{ font: 700 18px {marina.FONT}; fill: {marina.INK}; }}",
+        f"      .ty   {{ font: 500 14px {marina.FONT}; fill: {marina.INK}; }}",
+        f"      .fig  {{ font: 700 24px {marina.FONT}; fill: {marina.CYAN}; }}",
+        f"      .figl {{ font: 600 12px {marina.FONT}; fill: {marina.INK}; }}",
+        f"      .figs {{ font: 500 11px {marina.FONT}; fill: {marina.INK_MUTED}; }}",
+        f"      .ring {{ font: 700 20px {marina.FONT}; fill: {marina.INK}; }}",
         "    </style>",
         f'    <clipPath id="headClip">'
         f'<rect x="{TEXT_X}" y="{HEAD_Y + 12}" width="{RIGHT - TEXT_X}" height="2"/></clipPath>',
@@ -632,6 +734,7 @@ def _svg(rows, by_hour: list[int], streak, pic: str) -> str:
         )
 
     out += _prompt(prompt_y)
+    out += _typing(typing_y)
 
     out.append("</svg>")
     return "\n".join(out) + "\n"

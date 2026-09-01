@@ -2,7 +2,10 @@ name: Update generated assets
 
 on:
   schedule:
-    - cron: "0 3 * * *"     # daily — streaks and "uptime" change every day
+    # Weekly. This is the fallback that keeps the committed SVGs from going
+    # stale; the Worker serves the live card, so daily commits here bought
+    # noise rather than freshness.
+    - cron: "0 3 * * 0"
   workflow_dispatch:        # Allow manual trigger from GitHub UI
 
 jobs:
