@@ -10,8 +10,8 @@
          https://muddyblack-card.<subdomain>.workers.dev/card.svg
      See worker/README.md. Keep the workflow until the Worker has proven
      itself — this file is the fallback. -->
-<a href="https://raw.githubusercontent.com/Muddyblack/muddyblack/master/assets/fastfetch.svg">
-  <img src="assets/fastfetch.svg" alt="muddyblack@github" width="820" />
+<a href="https://muddyblack-card.muddyblack.workers.dev/card.svg">
+  <img src="https://muddyblack-card.muddyblack.workers.dev/card.svg" alt="muddyblack@github" width="820" />
 </a>
 <br/>
 <br/>
