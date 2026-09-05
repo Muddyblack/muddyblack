@@ -19,7 +19,7 @@ mkdir -p "$WORK/src" "$WORK/tests"
 cp "$ROOT"/worker/src/*.ts "$WORK/src/"
 cp "$HERE"/*.ts            "$WORK/src/"
 cp "$ROOT"/tests/fixture.json "$WORK/tests/"
-sed -i -E 's#from "(\.\./src/|\./)(marina|github|card|languages)(\.ts)?"#from "./\2.ts"#g' "$WORK/src"/*.ts
+sed -i -E 's#from "(\.\./src/|\./)(marina|github|card|languages|fallback)(\.ts)?"#from "./\2.ts"#g' "$WORK/src"/*.ts
 sed -i -E 's#\.\./\.\./tests/fixture\.json#../tests/fixture.json#'              "$WORK/src"/*.ts
 
 case "$MODE" in

@@ -9,6 +9,17 @@
 const API = "https://api.github.com/graphql";
 const UA  = "muddyblack-card-worker";
 
+/** Per-fetch deadlines.
+ *
+ *  GitHub's camo proxy gives an image source a handful of seconds and then
+ *  gives up, and a browser <img> shows alt text when it does. An upstream
+ *  fetch that merely hangs would therefore cost us the whole card, so every
+ *  one of them is capped well inside that budget: better a stale card, or the
+ *  placeholder, than a request nobody is still waiting on. */
+export const GRAPHQL_TIMEOUT_MS = 6000;
+export const AVATAR_TIMEOUT_MS  = 5000;
+export const VIEWS_TIMEOUT_MS   = 3000;
+
 export const DAYS_BACK = 365;
 // A named zone, not a fixed offset — Germany is +1 in winter, +2 in summer.
 // GitHub exposes no timezone through either API, so this is configuration.
@@ -66,6 +77,7 @@ async function graphql<T>(token: string, query: string, variables: Record<string
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ query, variables }),
+    signal: AbortSignal.timeout(GRAPHQL_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const body = (await res.json()) as { data?: T; errors?: unknown };
@@ -305,7 +317,10 @@ export function streaks(days: Map<string, number>, tz: string): Streaks | null {
 
 /** The avatar as a data: URI — the SVG has to stand alone behind camo. */
 export async function avatar(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA },
+    signal: AbortSignal.timeout(AVATAR_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`avatar HTTP ${res.status}`);
   const bytes = new Uint8Array(await res.arrayBuffer());
   let binary = "";
@@ -327,7 +342,7 @@ export async function views(login: string): Promise<number | null> {
   try {
     const res = await fetch(
       `https://komarev.com/ghpvc/?username=${encodeURIComponent(login)}&style=flat-square`,
-      { headers: { "User-Agent": UA } },
+      { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(VIEWS_TIMEOUT_MS) },
     );
     if (!res.ok) return null;
     const found = [...(await res.text()).matchAll(/>([\d,]+)<\/text>/g)];

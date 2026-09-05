@@ -11,6 +11,7 @@ import {
 } from "./github";
 import { rows, render } from "./card";
 import { fold, render as renderLangs } from "./languages";
+import { placeholder } from "./fallback";
 
 interface Env {
   GITHUB_TOKEN: string;
@@ -22,14 +23,38 @@ interface Env {
 const MAX_AGE = 1800;        // 30 min fresh
 const SWR     = 86400;       // then a day of stale-while-revalidate
 
-function svgResponse(body: string, cached: boolean): Response {
+// How long a build gets before the request gives up on it. GitHub's camo proxy
+// fetches a README image with a deadline of its own and shows nothing at all
+// when that passes — so this has to expire *first*, while there is still time
+// to answer with a real SVG. The individual fetches in github.ts are capped
+// tighter still; this is the backstop for the whole chain of them.
+const BUILD_DEADLINE_MS = 9000;
+
+// A placeholder is a statement that something is wrong right now, not a card.
+// It must expire quickly or camo will keep showing it long after the Worker has
+// recovered — a minute is enough to absorb a burst without outliving the fault.
+const FALLBACK_MAX_AGE = 60;
+
+function svgResponse(body: string, cached: boolean, maxAge = MAX_AGE, swr = SWR): Response {
+  const control = swr
+    ? `public, max-age=${maxAge}, stale-while-revalidate=${swr}`
+    : `public, max-age=${maxAge}`;
   return new Response(body, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": `public, max-age=${MAX_AGE}, stale-while-revalidate=${SWR}`,
+      "Cache-Control": control,
       "X-Card-Cache": cached ? "HIT" : "MISS",
     },
   });
+}
+
+/** Reject once ms have passed, so a hung upstream cannot hold the request. */
+function withDeadline<T>(work: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`build exceeded ${ms}ms`)), ms)),
+  ]);
 }
 
 async function buildCard(env: Env): Promise<string> {
@@ -39,7 +64,10 @@ async function buildCard(env: Env): Promise<string> {
 
   const [hours, pic, seen] = await Promise.all([
     commitHours(env.GITHUB_TOKEN, p, tz),
-    avatar(p.avatarUrl),
+    // The avatar is decoration; the card is the data. A failed or slow fetch
+    // used to reject the whole Promise.all and cost the reader everything, so
+    // it degrades to an empty hex instead — see logo() in card.ts.
+    avatar(p.avatarUrl).catch(() => ""),
     views(login),
   ]);
 
@@ -105,19 +133,28 @@ export default {
     }
 
     try {
-      const svg = await build(env);
+      const svg = await withDeadline(build(env), BUILD_DEADLINE_MS);
       const res = svgResponse(svg, false);
       ctx.waitUntil(cache.put(key, res.clone()));
       return res;
     } catch (err) {
-      // Never surface a broken image: fall back to whatever is still cached,
-      // and only 500 if there is genuinely nothing to show.
+      // Never surface a broken image. An <img> can only render an image, so a
+      // 500 with a text body is not a smaller failure than a blank one — it is
+      // the same failure, and it is what puts bare alt text in the README.
+      //
+      // On a workers.dev subdomain there is a second trap: caches.default is a
+      // documented no-op there, so this stale lookup always misses and the
+      // placeholder is the only thing standing between a GitHub hiccup and that
+      // alt text. Serve it, with 200 and a short TTL, and let the next request
+      // try again.
       const stale = await cache.match(key, { ignoreMethod: true });
       if (stale) return stale;
-      return new Response(`${url.pathname} build failed: ${(err as Error).message}`, {
-        status: 500,
-        headers: { "Cache-Control": "no-store" },
-      });
+
+      console.error(`${url.pathname} build failed: ${(err as Error).message}`);
+      const langs = path === "/languages.svg";
+      const title = langs ? "languages by commit weight" : "muddyblack@github";
+      const svg = placeholder(title, "refreshing — check back in a minute", 820, langs ? 322 : 220);
+      return svgResponse(svg, false, FALLBACK_MAX_AGE, 0);
     }
   },
 } satisfies ExportedHandler<Env>;

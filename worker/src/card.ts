@@ -141,9 +141,14 @@ function logo(x: number, y: number, size: number, pic: string): string[] {
   return [
     '  <g aria-hidden="true">',
     `    <clipPath id="hexClip"><polygon points="${hex}"/></clipPath>`,
-    `    <image href="${pic}" x="${n1(cx - w / 2)}" y="${n1(cy - w / 2)}"` +
-      ` width="${n1(w)}" height="${n1(w)}" clip-path="url(#hexClip)"` +
-      ' preserveAspectRatio="xMidYMid slice"/>',
+    // An empty pic means the avatar fetch failed. The hex outline alone is a
+    // far better card than no card, so draw the frame and skip the fill —
+    // never let one missing image take the whole render down with it.
+    ...(pic
+      ? [`    <image href="${pic}" x="${n1(cx - w / 2)}" y="${n1(cy - w / 2)}"` +
+         ` width="${n1(w)}" height="${n1(w)}" clip-path="url(#hexClip)"` +
+         ' preserveAspectRatio="xMidYMid slice"/>']
+      : [`    <polygon points="${hex}" fill="${m.TRACK}"/>`]),
     `    <polygon points="${hex}" fill="none" stroke="${m.CYAN}" stroke-width="3"` +
       ' stroke-linejoin="round"/>',
     "  </g>",

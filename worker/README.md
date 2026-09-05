@@ -110,8 +110,34 @@ without a commit, but not instantly — expect it to lag by camo's TTL plus up t
 
 ## Failure behaviour
 
-If the GitHub API errors, the Worker serves that route's last cached card rather
-than a broken image. It only returns 500 when nothing has ever been cached.
+**An image route never answers with something that is not an image.** This is
+the whole rule, and it is worth stating plainly because the failure it prevents
+looks like something else entirely: an `<img>` can only render an image, so a
+500 with a text body, a timed-out fetch and a blank response all collapse to the
+same thing in a README — the bare `alt` text. "It just shows text" is not a slow
+connection; it is the Worker having answered with a non-image.
+
+So, in order:
+
+1. The last cached card, if the GitHub API errored and there is one.
+2. Otherwise a placeholder SVG — the frame, the title, and a note that it is
+   refreshing — served `200` with `max-age=60`, so camo drops it a minute later
+   and tries again. It is built from constants alone: no fetch, nothing to fail.
+
+Two supporting deadlines keep a *slow* upstream from becoming that same failure.
+Camo gives an image source only a few seconds before it gives up, so each fetch
+is capped (`GRAPHQL_TIMEOUT_MS` 6 s, avatar 5 s, komarev 3 s) and the whole
+build is capped again at `BUILD_DEADLINE_MS` (9 s). Whichever fires, the request
+still answers with an SVG rather than being cut off mid-transfer.
+
+The avatar is treated as decoration, not data: if that one fetch fails the card
+renders with an empty hex instead of taking everything else down with it.
+
+Note what this does *not* depend on: the reader's connection. Cloudflare's CPU
+time and the GitHub calls are identical whether the client is on fibre or
+tethered — a slow client only makes the 88 KB transfer take longer, and a
+partially transferred image still shows as alt text while it arrives. If the
+card is *permanently* text for someone, look at the Worker, not their line.
 
 ## Testing before you deploy
 
@@ -142,7 +168,10 @@ warm, or you will draw the wrong conclusion and go shopping for another host.
 
 **The one real gotcha: `caches.default` does nothing on a `workers.dev`
 subdomain.** Cache API operations there are silently no-ops, so every request
-rebuilds the card — roughly 8 GitHub API calls each. What still protects you is
+rebuilds the card — roughly 8 GitHub API calls each. That also means the stale
+fallback above can never hit while the Worker lives on `workers.dev`: the
+placeholder is doing all the work, and moving to a custom domain is what turns
+"a placeholder for a minute" back into "yesterday's card". What still protects you is
 the `Cache-Control` header, which GitHub's camo and browsers do honour, and camo
 is what actually sits in front of this. If you want real edge caching, put the
 Worker on a custom domain (a route on any zone you have in Cloudflare); the code
