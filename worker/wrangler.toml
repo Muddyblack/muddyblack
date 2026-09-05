@@ -1,6 +1,7 @@
 name = "muddyblack-card"
 main = "src/index.ts"
 compatibility_date = "2026-08-01"
+tsconfig = "tsconfig.json"
 
 # GITHUB_TOKEN is a secret, not a var — set it with:
 #   npx wrangler secret put GITHUB_TOKEN
