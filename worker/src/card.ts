@@ -104,7 +104,8 @@ type Row = [string, string];
 
 export function rows(p: Profile, totalCommits: number, views: number | null): Row[] {
   const own = p.repos.filter((r) => !r.isFork);
-  const widgets = own.filter((r) => r.name.startsWith("kde-"));
+  const KDE_TOPICS = /\bkde\b|\bplasma\b|plasmoid/;
+  const widgets = own.filter((r) => r.topics.some((t) => KDE_TOPICS.test(t)));
   const stars = own.reduce((a, r) => a + r.stars, 0);
 
   let host = p.name || p.login;

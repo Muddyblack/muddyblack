@@ -52,6 +52,8 @@ export interface Repo {
   isFork: boolean;
   stars: number;
   pushedAt: string;
+  /** Repository topics (tags) as set on GitHub. */
+  topics: string[];
   /** Byte counts per language, largest first — GitHub's own linguist figures. */
   languages: { name: string; size: number }[];
 }
@@ -124,6 +126,7 @@ export async function profile(token: string, login: string, configRepo: string):
                      orderBy: {field: PUSHED_AT, direction: DESC}) {
           nodes {
             name isFork stargazerCount pushedAt
+            repositoryTopics(first: 20) { nodes { topic { name } } }
             languages(first: 20, orderBy: {field: SIZE, direction: DESC}) {
               edges { size node { name } }
             }
@@ -161,6 +164,7 @@ export async function profile(token: string, login: string, configRepo: string):
     avatarUrl: u.avatarUrl,
     repos: u.repositories.nodes.map((r: any) => ({
       name: r.name, isFork: r.isFork, stars: r.stargazerCount, pushedAt: r.pushedAt,
+      topics: (r.repositoryTopics?.nodes ?? []).map((n: any) => n.topic.name as string),
       languages: (r.languages?.edges ?? []).map((e: any) => ({ name: e.node.name, size: e.size })),
     })),
     channel: match ? match[1].replace("nixos-", "") : "unstable",

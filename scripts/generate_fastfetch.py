@@ -301,7 +301,8 @@ def collect(total_commits: int):
 
     repos   = list(_paginate(f"/users/{USERNAME}/repos", "?type=owner"))
     own     = [r for r in repos if not r["fork"]]
-    widgets = [r for r in own if r["name"].startswith("kde-")]
+    KDE_TOPICS = re.compile(r"\bkde\b|\bplasma\b|plasmoid")
+    widgets = [r for r in own if any(KDE_TOPICS.search(t) for t in r.get("topics", []))]
     stars   = sum(r["stargazers_count"] for r in own)
 
     # the OS *is* the person here; the monogram is cut from the same name
