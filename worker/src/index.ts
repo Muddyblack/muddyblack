@@ -28,7 +28,7 @@ const SWR     = 86400;       // then a day of stale-while-revalidate
 // when that passes — so this has to expire *first*, while there is still time
 // to answer with a real SVG. The individual fetches in github.ts are capped
 // tighter still; this is the backstop for the whole chain of them.
-const BUILD_DEADLINE_MS = 9000;
+const BUILD_DEADLINE_MS = 3500;
 
 // A placeholder is a statement that something is wrong right now, not a card.
 // It must expire quickly or camo will keep showing it long after the Worker has
@@ -132,11 +132,19 @@ export default {
       });
     }
 
-    try {
-      const svg = await withDeadline(build(env), BUILD_DEADLINE_MS);
+    // A cold build (GitHub GraphQL is ~3s a call, and the card needs several)
+    // outlasts the deadline. Abandoning it would mean the cache never warms and
+    // every request pays the same price, so it keeps running after the
+    // placeholder goes out and fills the cache for the next one.
+    const building = build(env).then(async (svg) => {
       const res = svgResponse(svg, false);
-      ctx.waitUntil(cache.put(key, res.clone()));
+      await cache.put(key, res.clone());
       return res;
+    });
+    ctx.waitUntil(building.catch(() => {}));
+
+    try {
+      return await withDeadline(building, BUILD_DEADLINE_MS);
     } catch (err) {
       // Never surface a broken image. An <img> can only render an image, so a
       // 500 with a text body is not a smaller failure than a blank one — it is
