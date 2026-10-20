@@ -16,7 +16,7 @@ const UA  = "muddyblack-card-worker";
  *  fetch that merely hangs would therefore cost us the whole card, so every
  *  one of them is capped well inside that budget: better a stale card, or the
  *  placeholder, than a request nobody is still waiting on. */
-export const GRAPHQL_TIMEOUT_MS = 6000;
+export const GRAPHQL_TIMEOUT_MS = 20000;
 export const AVATAR_TIMEOUT_MS  = 5000;
 export const VIEWS_TIMEOUT_MS   = 3000;
 
