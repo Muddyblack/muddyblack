@@ -11,11 +11,9 @@ const UA  = "muddyblack-card-worker";
 
 /** Per-fetch deadlines.
  *
- *  GitHub's camo proxy gives an image source a handful of seconds and then
- *  gives up, and a browser <img> shows alt text when it does. An upstream
- *  fetch that merely hangs would therefore cost us the whole card, so every
- *  one of them is capped well inside that budget: better a stale card, or the
- *  placeholder, than a request nobody is still waiting on. */
+ *  Builds run from the cron, never while a reader waits, so these only stop a
+ *  hung upstream from stalling a refresh. GraphQL gets a generous cap because
+ *  the profile query alone routinely takes 5s; decoration gets a tight one. */
 export const GRAPHQL_TIMEOUT_MS = 20000;
 export const AVATAR_TIMEOUT_MS  = 5000;
 export const VIEWS_TIMEOUT_MS   = 3000;

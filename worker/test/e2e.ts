@@ -1,6 +1,6 @@
 // End-to-end run of the Worker's real data path against the live GitHub API,
 // outside Cloudflare. Proves the queries, the streak maths and the renderer;
-// does not prove Cloudflare-specific bits (caches.default, ctx.waitUntil).
+// does not prove Cloudflare-specific bits (KV, the cron trigger).
 import { writeFileSync } from "node:fs";
 import {
   profile, commitHours, langWeights, streaks, avatar, views, tzLabel, DEFAULT_TZ,

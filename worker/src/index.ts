@@ -1,10 +1,11 @@
 // Serves the profile card live, so the README stops needing a daily commit.
 //
-// Caching matters more than it looks. GitHub proxies README images through
-// camo, which caches on its own schedule, so "live" already means "as fresh as
-// camo allows". On top of that this Worker holds its own copy for 30 minutes
-// and serves a stale one for up to a day while it refreshes in the background —
-// so a GitHub API hiccup shows yesterday's card rather than an error.
+// A build takes GitHub's GraphQL API several seconds per call and the card
+// needs a handful of them — far longer than camo, GitHub's README image proxy,
+// will wait. So no reader ever waits on a build: a cron trigger rebuilds both
+// SVGs every 15 minutes and stores them in KV, and a request only reads KV.
+// A failed rebuild leaves the previous SVG in place, so a GitHub hiccup shows
+// the last good card rather than an error.
 
 import {
   profile, commitHours, langWeights, streaks, avatar, views, tzLabel, DEFAULT_TZ,
@@ -14,47 +15,28 @@ import { fold, render as renderLangs } from "./languages";
 import { placeholder } from "./fallback";
 
 interface Env {
+  CARDS: KVNamespace;
   GITHUB_TOKEN: string;
   GITHUB_USERNAME: string;
   NIXOS_REPO: string;
   CARD_TZ?: string;
 }
 
-const MAX_AGE = 1800;        // 30 min fresh
-const SWR     = 86400;       // then a day of stale-while-revalidate
+// How long camo and browsers may keep a card. The cron refreshes every 15
+// minutes, so a short TTL here is what keeps the README close to that.
+const MAX_AGE = 600;
 
-// How long a build gets before the request gives up on it. GitHub's camo proxy
-// fetches a README image with a deadline of its own and shows nothing at all
-// when that passes — so this has to expire *first*, while there is still time
-// to answer with a real SVG. The individual fetches in github.ts are capped
-// tighter still; this is the backstop for the whole chain of them.
-const BUILD_DEADLINE_MS = 3500;
-
-// A placeholder is a statement that something is wrong right now, not a card.
-// It must expire quickly or camo will keep showing it long after the Worker has
-// recovered — a minute is enough to absorb a burst without outliving the fault.
+// A placeholder only goes out before the first cron run has filled KV. It must
+// expire quickly or camo will keep showing it after the real card exists.
 const FALLBACK_MAX_AGE = 60;
 
-function svgResponse(body: string, cached: boolean, maxAge = MAX_AGE, swr = SWR): Response {
-  const control = swr
-    ? `public, max-age=${maxAge}, stale-while-revalidate=${swr}`
-    : `public, max-age=${maxAge}`;
+function svgResponse(body: string, maxAge: number): Response {
   return new Response(body, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": control,
-      "X-Card-Cache": cached ? "HIT" : "MISS",
+      "Cache-Control": `public, max-age=${maxAge}`,
     },
   });
-}
-
-/** Reject once ms have passed, so a hung upstream cannot hold the request. */
-function withDeadline<T>(work: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    work,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`build exceeded ${ms}ms`)), ms)),
-  ]);
 }
 
 async function buildCard(env: Env): Promise<string> {
@@ -81,18 +63,38 @@ async function buildLanguages(env: Env): Promise<string> {
   const p = await profile(env.GITHUB_TOKEN, env.GITHUB_USERNAME, env.NIXOS_REPO);
   const { ranked, commits, repos } = await langWeights(env.GITHUB_TOKEN, p);
   // Same rule as the generator: never publish an empty treemap. Throwing here
-  // hands the request to the stale-cache fallback below.
+  // keeps the previous one in KV.
   if (!ranked.length) throw new Error("no language data");
   const { tiles, tail } = fold(ranked);
   return renderLangs(tiles, tail, commits, repos);
 }
 
-/** Path → builder. Everything else is a 404. */
-const ROUTES: Record<string, (env: Env) => Promise<string>> = {
-  "/": buildCard,
-  "/card.svg": buildCard,
-  "/languages.svg": buildLanguages,
+/** KV key → builder, and the placeholder shown until that key exists. */
+const CARDS: Record<string, { build: (env: Env) => Promise<string>; title: string; height: number }> = {
+  "card.svg":      { build: buildCard,      title: "muddyblack@github",          height: 220 },
+  "languages.svg": { build: buildLanguages, title: "languages by commit weight", height: 322 },
 };
+
+/** Path → KV key. Everything else is a 404. */
+const ROUTES: Record<string, string> = {
+  "/": "card.svg",
+  "/card.svg": "card.svg",
+  "/languages.svg": "languages.svg",
+};
+
+async function refresh(env: Env, key: string): Promise<void> {
+  if (!env.GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set (wrangler secret put GITHUB_TOKEN)");
+  await env.CARDS.put(key, await CARDS[key].build(env));
+}
+
+/** Rebuild every card; one failing leaves the others (and its old copy) alone. */
+async function refreshAll(env: Env): Promise<void> {
+  const keys = Object.keys(CARDS);
+  const results = await Promise.allSettled(keys.map((key) => refresh(env, key)));
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.error(`${keys[i]} refresh failed: ${(r.reason as Error).message}`);
+  });
+}
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -101,68 +103,24 @@ export default {
     if (url.pathname === "/health") {
       return new Response("ok", { headers: { "Cache-Control": "no-store" } });
     }
-    const build = ROUTES[url.pathname];
-    if (!build) {
+    const key = ROUTES[url.pathname];
+    if (!key) {
       return new Response("not found", { status: 404 });
     }
-    if (!env.GITHUB_TOKEN) {
-      return new Response("GITHUB_TOKEN is not set (wrangler secret put GITHUB_TOKEN)", {
-        status: 500,
-      });
-    }
 
-    // "/" and "/card.svg" are the same image, so they share one cache entry.
-    const cache = caches.default;
-    const path = build === buildCard ? "/card.svg" : url.pathname;
-    const key = new Request(new URL(path, url.origin).toString(), { method: "GET" });
+    const svg = await env.CARDS.get(key);
+    if (svg) return svgResponse(svg, MAX_AGE);
 
-    const hit = await cache.match(key);
-    if (hit) {
-      // refresh in the background once the fresh window has passed
-      const age = Number(hit.headers.get("Age") ?? 0);
-      if (age > MAX_AGE) {
-        ctx.waitUntil(
-          build(env)
-            .then((svg) => cache.put(key, svgResponse(svg, false)))
-            .catch(() => {}),
-        );
-      }
-      return new Response(hit.body, {
-        headers: { ...Object.fromEntries(hit.headers), "X-Card-Cache": "HIT" },
-      });
-    }
+    // Nothing stored yet — only right after the first deploy. Build in the
+    // background so the next request has it, and answer with a real SVG now:
+    // an <img> that gets anything else shows bare alt text in the README.
+    ctx.waitUntil(refresh(env, key).catch((err) =>
+      console.error(`${key} refresh failed: ${(err as Error).message}`)));
+    const { title, height } = CARDS[key];
+    return svgResponse(placeholder(title, "refreshing — check back in a minute", 820, height), FALLBACK_MAX_AGE);
+  },
 
-    // A cold build (GitHub GraphQL is ~3s a call, and the card needs several)
-    // outlasts the deadline. Abandoning it would mean the cache never warms and
-    // every request pays the same price, so it keeps running after the
-    // placeholder goes out and fills the cache for the next one.
-    const building = build(env).then(async (svg) => {
-      const res = svgResponse(svg, false);
-      await cache.put(key, res.clone());
-      return res;
-    });
-    ctx.waitUntil(building.catch(() => {}));
-
-    try {
-      return await withDeadline(building, BUILD_DEADLINE_MS);
-    } catch (err) {
-      // Never surface a broken image. An <img> can only render an image, so a
-      // 500 with a text body is not a smaller failure than a blank one — it is
-      // the same failure, and it is what puts bare alt text in the README.
-      //
-      // On a workers.dev subdomain there is a second trap: caches.default is a
-      // documented no-op there, so this stale lookup always misses and the
-      // placeholder is the only thing standing between a GitHub hiccup and that
-      // alt text. Serve it, with 200 and a short TTL, and let the next request
-      // try again.
-      const stale = await cache.match(key, { ignoreMethod: true });
-      if (stale) return stale;
-
-      console.error(`${url.pathname} build failed: ${(err as Error).message}`);
-      const langs = path === "/languages.svg";
-      const title = langs ? "languages by commit weight" : "muddyblack@github";
-      const svg = placeholder(title, "refreshing — check back in a minute", 820, langs ? 322 : 220);
-      return svgResponse(svg, false, FALLBACK_MAX_AGE, 0);
-    }
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(refreshAll(env));
   },
 } satisfies ExportedHandler<Env>;

@@ -40,15 +40,23 @@ If `npm install` complains about the wrangler version, `npm i -D wrangler@latest
 npx wrangler secret put GITHUB_TOKEN
 ```
 
+**4b. Create the KV namespace** the rendered SVGs live in, and paste the `id` it
+prints into `wrangler.toml` under `[[kv_namespaces]]`:
+
+```sh
+npx wrangler kv namespace create CARDS
+```
+
 **5. Try it locally first.**
 
 ```sh
 cp .dev.vars.example .dev.vars    # then paste your token into it
-npx wrangler dev                  # http://localhost:8787/card.svg
+npx wrangler dev --test-scheduled   # http://localhost:8787/card.svg
+curl "http://localhost:8787/__scheduled"   # run the cron once to fill KV
 ```
 
-This is the only way to exercise `caches.default` and `ctx.waitUntil`; the
-scripts under `test/` cover everything else without Cloudflare.
+This is the only way to exercise KV and the cron trigger; the scripts under
+`test/` cover everything else without Cloudflare.
 
 **6. Deploy.**
 
@@ -99,14 +107,27 @@ the byte counts free — they ride along on the profile query — and asks for e
 repo's commit `totalCount` in one aliased query. Two subrequests for
 `/languages.svg`.
 
+## How a request is served
+
+A build is slow — the profile query alone routinely takes 5 s, and the card
+needs it plus up to six commit-history rounds. Camo, GitHub's README image
+proxy, gives up after a few seconds and shows the bare `alt` text. So no reader
+ever waits on a build:
+
+- A **cron trigger** (`*/15 * * * *`) rebuilds both SVGs and writes them to KV.
+- A **request** only reads KV. That takes milliseconds, from any region, for
+  every visitor — there is no cold first load and nothing to refresh by hand.
+
+KV is used rather than the Cache API because the cache is per data centre (a
+visitor elsewhere would start cold) and is a no-op on `workers.dev` anyway.
+
 ## Freshness
 
-`Cache-Control: public, max-age=1800, stale-while-revalidate=86400`.
+`Cache-Control: public, max-age=600`.
 
-Worth being honest about what "live" means here: GitHub serves README images
-through its camo proxy, which caches on its own schedule. The card updates
-without a commit, but not instantly — expect it to lag by camo's TTL plus up to
-30 minutes.
+GitHub serves README images through camo, which caches on its own schedule. The
+card updates without a commit, but not instantly — expect it to lag by up to 15
+minutes (the cron) plus camo's TTL.
 
 ## Failure behaviour
 
@@ -117,18 +138,17 @@ looks like something else entirely: an `<img>` can only render an image, so a
 same thing in a README — the bare `alt` text. "It just shows text" is not a slow
 connection; it is the Worker having answered with a non-image.
 
-So, in order:
+So:
 
-1. The last cached card, if the GitHub API errored and there is one.
-2. Otherwise a placeholder SVG — the frame, the title, and a note that it is
-   refreshing — served `200` with `max-age=60`, so camo drops it a minute later
-   and tries again. It is built from constants alone: no fetch, nothing to fail.
+1. If a cron rebuild fails, KV keeps the previous SVG and requests keep serving
+   it — a GitHub hiccup shows the last good card, never an error.
+2. Only if KV has nothing yet (right after the first deploy, before the cron
+   has run) does a request get a placeholder SVG — the frame, the title, and a
+   note that it is refreshing — served `200` with `max-age=60`. That request
+   also starts a build in the background, so the next one gets the real card.
 
-Two supporting deadlines keep a *slow* upstream from becoming that same failure.
-Camo gives an image source only a few seconds before it gives up, so each fetch
-is capped (`GRAPHQL_TIMEOUT_MS` 6 s, avatar 5 s, komarev 3 s) and the whole
-build is capped again at `BUILD_DEADLINE_MS` (9 s). Whichever fires, the request
-still answers with an SVG rather than being cut off mid-transfer.
+Each upstream fetch is capped (`GRAPHQL_TIMEOUT_MS` 20 s, avatar 5 s, komarev
+3 s) so a hung GitHub cannot stall a refresh. Nobody is waiting on it.
 
 The avatar is treated as decoration, not data: if that one fetch fails the card
 renders with an empty hex instead of taking everything else down with it.
@@ -148,8 +168,7 @@ tests/parity.sh             # both renderers vs the Python ones, byte for byte
 ```
 
 `e2e` exercises the real queries, the streak maths and the renderer. It does not
-exercise the Cloudflare-only parts (`caches.default`, `ctx.waitUntil`) — for
-those, `npx wrangler dev` and hit http://localhost:8787/card.svg.
+exercise the Cloudflare-only parts (KV, the cron trigger) — for those, see step 5.
 
 ## The free plan
 
@@ -158,24 +177,14 @@ Measured, not guessed (`worker/test/run.sh bench` on the fixture):
 | Limit | Budget | Actual |
 |---|---|---|
 | CPU per request | 10 ms | render p50 **0.59 ms**, p95 1.75 ms; avatar base64 0.17 ms |
-| Subrequests per request | 50 | `/card.svg` **4–11** (1 profile + ≤6 history rounds + avatar + views); `/languages.svg` **2** |
+| Subrequests per cron run | 50 | **6–13**: card 4–11 (1 profile + ≤6 history rounds + avatar + views), languages 2 |
 | Requests | 100k/day | not close |
+| KV reads / writes | 100k / 1k per day | one read per request; 192 writes/day |
 
 A word on that CPU figure: a *single* cold call measures V8 compiling the
 renderer and reads ~30 ms, which looks like a failure. Workers reuses a warm
 isolate across requests, so steady state is what the limit applies to. Benchmark
 warm, or you will draw the wrong conclusion and go shopping for another host.
-
-**The one real gotcha: `caches.default` does nothing on a `workers.dev`
-subdomain.** Cache API operations there are silently no-ops, so every request
-rebuilds the card — roughly 8 GitHub API calls each. That also means the stale
-fallback above can never hit while the Worker lives on `workers.dev`: the
-placeholder is doing all the work, and moving to a custom domain is what turns
-"a placeholder for a minute" back into "yesterday's card". What still protects you is
-the `Cache-Control` header, which GitHub's camo and browsers do honour, and camo
-is what actually sits in front of this. If you want real edge caching, put the
-Worker on a custom domain (a route on any zone you have in Cloudflare); the code
-needs no change.
 
 ## Weight
 

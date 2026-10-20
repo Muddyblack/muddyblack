@@ -14,5 +14,13 @@ NIXOS_REPO      = "Muddyblack/NixOS"
 # IANA zone for the hour breakdown; DST is handled, so do not use an offset.
 CARD_TZ         = "Europe/Berlin"
 
+# The rendered SVGs. Requests only read these; the cron below writes them.
+[[kv_namespaces]]
+binding = "CARDS"
+id      = "3738df409f16414889f42d6b14c6db86"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
 [observability]
 enabled = true
