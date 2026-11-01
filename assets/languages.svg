@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="820" height="322" viewBox="0 0 820 322"
-     role="img" aria-label="Languages by commit weight: QML 33% · Python 25% · Nix 12% · JavaScript 11% · Shell 8% · TypeScript 7% · other 3%">
+     role="img" aria-label="Languages by commit weight: QML 33% · Python 25% · Nix 12% · JavaScript 12% · Shell 8% · TypeScript 7% · other 3%">
   <defs>
     <style>
       .head { font: 600 11px 'JetBrains Mono', ui-monospace, monospace; fill: #0EADCF; letter-spacing: 2px; }
@@ -12,62 +12,62 @@
 
   <rect width="820" height="322" fill="#03233A" rx="10" stroke="#254D6A" stroke-width="1"/>
   <text x="24" y="30" class="head">LANGUAGES&#160;BY&#160;COMMIT&#160;WEIGHT</text>
-  <text x="796" y="30" class="foot" text-anchor="end">757 commits · 15 repos · last 365 days</text>
+  <text x="796" y="30" class="foot" text-anchor="end">777 commits · 15 repos · last 365 days</text>
 
-  <!-- QML 32.8% -->
+  <!-- QML 32.6% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.0s" fill="freeze"/>
-    <rect x="25.5" y="53.5" width="250.6" height="233.0" rx="6" fill="#0B5A70"/>
+    <rect x="25.5" y="53.5" width="248.3" height="233.0" rx="6" fill="#0B5A70"/>
     <text x="38.5" y="79.5" class="name" fill="#CBE0F0">qml</text>
-    <text x="38.5" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">32.8%</text>
+    <text x="38.5" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">32.6%</text>
   </g>
 
-  <!-- Python 25.1% -->
+  <!-- Python 25.3% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.08s" fill="freeze"/>
-    <rect x="279.1" y="53.5" width="191.0" height="233.0" rx="6" fill="#0E7D99"/>
-    <text x="292.1" y="79.5" class="name" fill="#CBE0F0">python</text>
-    <text x="292.1" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">25.1%</text>
+    <rect x="276.8" y="53.5" width="192.6" height="233.0" rx="6" fill="#0E7D99"/>
+    <text x="289.8" y="79.5" class="name" fill="#CBE0F0">python</text>
+    <text x="289.8" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">25.3%</text>
   </g>
 
-  <!-- Nix 12.0% -->
+  <!-- Nix 12.1% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.16s" fill="freeze"/>
-    <rect x="473.1" y="53.5" width="177.0" height="118.7" rx="6" fill="#0EADCF"/>
-    <text x="486.1" y="79.5" class="name" fill="#CBE0F0">nix</text>
-    <text x="486.1" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">12.0%</text>
+    <rect x="472.5" y="53.5" width="180.4" height="117.6" rx="6" fill="#0EADCF"/>
+    <text x="485.5" y="79.5" class="name" fill="#CBE0F0">nix</text>
+    <text x="485.5" y="97.5" class="pct" fill="#CBE0F0" opacity="0.75">12.1%</text>
   </g>
 
-  <!-- JavaScript 11.3% -->
+  <!-- JavaScript 11.6% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.24s" fill="freeze"/>
-    <rect x="473.1" y="175.2" width="177.0" height="111.3" rx="6" fill="#3FCDE8"/>
-    <text x="486.1" y="201.2" class="name" fill="#01121F">javascript</text>
-    <text x="486.1" y="219.2" class="pct" fill="#01121F" opacity="0.75">11.3%</text>
+    <rect x="472.5" y="174.1" width="180.4" height="112.4" rx="6" fill="#3FCDE8"/>
+    <text x="485.5" y="200.1" class="name" fill="#01121F">javascript</text>
+    <text x="485.5" y="218.1" class="pct" fill="#01121F" opacity="0.75">11.6%</text>
   </g>
 
-  <!-- Shell 8.4% -->
+  <!-- Shell 8.2% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.32s" fill="freeze"/>
-    <rect x="653.1" y="53.5" width="141.4" height="102.5" rx="6" fill="#7FE3F5"/>
-    <text x="666.1" y="79.5" class="name" fill="#01121F">shell</text>
-    <text x="666.1" y="97.5" class="pct" fill="#01121F" opacity="0.75">8.4%</text>
+    <rect x="655.9" y="53.5" width="138.6" height="102.9" rx="6" fill="#7FE3F5"/>
+    <text x="668.9" y="79.5" class="name" fill="#01121F">shell</text>
+    <text x="668.9" y="97.5" class="pct" fill="#01121F" opacity="0.75">8.2%</text>
   </g>
 
-  <!-- TypeScript 6.9% -->
+  <!-- TypeScript 6.7% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.4s" fill="freeze"/>
-    <rect x="653.1" y="159.0" width="93.9" height="127.5" rx="6" fill="#BFF2FB"/>
-    <text x="703.5" y="278.5" class="mini" fill="#01121F" transform="rotate(-90 703.5 278.5)">typescript 7%</text>
+    <rect x="655.9" y="159.4" width="91.0" height="127.1" rx="6" fill="#BFF2FB"/>
+    <text x="704.9" y="278.5" class="mini" fill="#01121F" transform="rotate(-90 704.9 278.5)">typescript 7%</text>
   </g>
 
   <!-- other 3.4% -->
   <g opacity="0">
     <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.48s" fill="freeze"/>
-    <rect x="750.0" y="159.0" width="44.5" height="127.5" rx="6" fill="#254D6A"/>
+    <rect x="749.8" y="159.4" width="44.7" height="127.1" rx="6" fill="#254D6A"/>
     <text x="775.7" y="278.5" class="mini" fill="#8295A0" transform="rotate(-90 775.7 278.5)">other 3%</text>
   </g>
 
-  <text x="24" y="310" class="foot">other: css · html · glsl · c++ · perl · +10 more</text>
+  <text x="24" y="310" class="foot">other: css · html · glsl · c++ · perl · +11 more</text>
   <text x="796" y="310" class="foot" text-anchor="end">area = commits × language mix</text>
 </svg>
